@@ -1,0 +1,130 @@
+/**
+ * YouEye Canvas — Base Styles
+ *
+ * Import this in your app's globals.css to get all the shadcn/Tailwind v4
+ * theme tokens, CSS variables, and dark-mode support out of the box:
+ *
+ *   @import "tailwindcss";
+ *   @import "tw-animate-css";
+ *   @import "@youeye/canvas/src/styles/globals.css";
+ *
+ *   /* Scan Canvas SDK source for Tailwind classes used in shared components *\/
+ *   @source "../../node_modules/@youeye/canvas/src";
+ *      — or, if linked via workspace: —
+ *   @source "../../../../YouEye-Canvas/src";
+ *
+ * The runtime theme (from YE-UI header config) is injected via <style id="ye-theme">
+ * in the layout and overrides these fallback values.
+ */
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+  }
+}
+
+.ye-mobile-shell-only,
+.ye-mobile-shell-spacer {
+  display: none;
+}
+
+body.embed-mode .ye-mobile-shell-only,
+body.embed-mode .ye-mobile-shell-spacer {
+  display: none !important;
+}
+
+@media (max-width: 640px), (display-mode: standalone) {
+  .ye-mobile-shell-desktop,
+  .ye-mobile-top-center,
+  .ye-mobile-top-actions {
+    display: none !important;
+  }
+
+  .ye-mobile-shell-only {
+    display: flex;
+  }
+
+  .ye-mobile-shell-spacer {
+    display: block;
+    height: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  .ye-mobile-top-header {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+.next/
+public/sw.js
+*.tsbuildinfo
+next-env.d.ts
+standalone.tar
+
+# Environment
+.env
+.env.local
+.env.*.local

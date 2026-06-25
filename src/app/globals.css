@@ -1,0 +1,212 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --amber: oklch(0.769 0.188 70.08);
+  --amber-light: oklch(0.769 0.188 70.08 / 15%);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --amber: oklch(0.769 0.188 70.08);
+  --amber-light: oklch(0.769 0.188 70.08 / 15%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Note card hover */
+.note-card {
+  transition: all 200ms ease;
+}
+.note-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 6%);
+}
+.dark .note-card:hover {
+  box-shadow: 0 4px 16px oklch(1 1 0 / 4%);
+}
+
+/* Checklist items in editor */
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.375rem 0;
+  border-radius: 0.375rem;
+  transition: background-color 150ms ease;
+}
+.checklist-item:hover {
+  background: var(--accent);
+}
+.checklist-item input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.125rem;
+  border-radius: 0.25rem;
+  accent-color: oklch(0.546 0.245 262.881);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.checklist-item.completed .checklist-text {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+.checklist-text {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--foreground);
+  font-family: inherit;
+}
+.checklist-text::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* Checklist preview on cards */
+.checklist-preview-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+}
+.checklist-preview-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: oklch(0.546 0.245 262.881);
+  transition: width 300ms ease;
+}
+
+/* Reminder badges */
+.reminder-upcoming {
+  background: oklch(0.546 0.245 262.881 / 12%);
+  color: oklch(0.546 0.245 262.881);
+}
+.reminder-overdue {
+  background: oklch(0.577 0.245 27.325 / 12%);
+  color: oklch(0.577 0.245 27.325);
+}
+
+/* Tag picker dropdown */
+.tag-picker-dropdown {
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* Sidebar transitions */
+.sidebar-item {
+  transition: all 150ms ease;
+}
+.sidebar-item:hover {
+  background: var(--accent);
+}
+.sidebar-item.active {
+  background: var(--accent);
+  font-weight: 500;
+}
+
+/* Embed mode — hides header and reduces chrome for iframe embedding in YE-UI settings */
+body.embed-mode header,
+body.embed-mode .ye-mobile-shell-only,
+body.embed-mode .ye-mobile-shell-spacer { display: none !important; }
+body.embed-mode { background: transparent; }
+
+.ye-mobile-shell-only,
+.ye-mobile-shell-spacer {
+  display: none;
+}
+
+@media (max-width: 640px), (display-mode: standalone) {
+  .ye-mobile-shell-desktop,
+  .ye-mobile-top-center,
+  .ye-mobile-top-actions {
+    display: none !important;
+  }
+
+  .ye-mobile-shell-only {
+    display: flex;
+  }
+
+  .ye-mobile-shell-spacer {
+    display: block;
+    height: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  .ye-mobile-top-header {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
