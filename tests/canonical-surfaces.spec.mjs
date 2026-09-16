@@ -28,6 +28,7 @@ test("Notes publishes canonical surfaces in runtime and install manifests", () =
   assert.match(route, /kind: "timeline-card"/);
   assert.match(route, /triggers: \["notes-note-edited"\]/);
   assert.doesNotMatch(route, /\n\s+widgets:\s*\[/);
+  assert.doesNotMatch(route, /\n\s+timeline_embeds:\s*\[/);
 
   assert.match(route, /version: packageJson\.version/);
   assert.match(yaml, versionPattern());

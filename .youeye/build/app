@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"; . "$script_dir/lib.sh"
+app_prepare_contract; app_require_pnpm; cd "$YOUEYE_SOURCE_DIR"; node scripts/prepare-release.mjs --check
+pnpm install --frozen-lockfile --offline --package-import-method=copy --store-dir "$YOUEYE_PNPM_STORE_DIR"
+rm -rf -- .next node_modules/.cache; pnpm run build
+standalone_root="$(app_find_standalone_root "$YOUEYE_SOURCE_DIR/.next/standalone")"; app_package_standalone "$standalone_root"

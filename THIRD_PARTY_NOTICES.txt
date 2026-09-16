@@ -1,0 +1,10 @@
+THIRD-PARTY NOTICES
+
+This application is built with third-party packages declared in package.json
+and pnpm-lock.yaml. Those packages retain their respective copyright notices
+and licenses. The release pipeline must produce an exact dependency SBOM and
+license report for the built artifact; this file does not replace either.
+
+No third-party image, font, or other media file is tracked in this repository
+at this source revision. Remote service names and marks referenced by product
+features belong to their respective owners and are not endorsed by YouEye.
