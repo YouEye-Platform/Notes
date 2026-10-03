@@ -78,6 +78,7 @@ export async function fetchUserInfo(
   name: string;
   email: string;
   groups: string[];
+  sid?: string;
 } | null> {
   try {
     const res = await fetch(config.userinfoUrl, {

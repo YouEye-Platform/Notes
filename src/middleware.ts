@@ -1,7 +1,4 @@
 import { createCanvasMiddleware } from "@/lib/middleware";
-import { initSession } from "@/lib/auth";
-
-initSession("ye-notes");
 
 export const middleware = createCanvasMiddleware({
   appId: "ye-notes",

@@ -99,10 +99,12 @@ export function createCallbackHandler(config: AuthRouteConfig) {
 
     const userInfo = await fetchUserInfo(oauthConfig, tokenData.access_token);
     if (!userInfo) return NextResponse.redirect(ssoRedirect);
+    if (!userInfo.sid) return NextResponse.redirect(ssoRedirect);
 
     const isAdmin = (userInfo.groups || []).some((g: string) => g.toLowerCase().includes("admin"));
     const sessionToken = await createSession({
       userId: userInfo.sub,
+      identitySessionId: userInfo.sid,
       username: userInfo.preferred_username || userInfo.name || "user",
       name: userInfo.name || userInfo.preferred_username || "User",
       email: userInfo.email || "",
@@ -120,7 +122,7 @@ export function createCallbackHandler(config: AuthRouteConfig) {
       httpOnly: true,
       secure: process.env.SECURE_COOKIES !== "false",
       sameSite: "lax",
-      maxAge: 86400,
+      maxAge: 60 * 60 * 24 * 30,
       path: "/",
     });
     response.cookies.delete(`${config.appId}-oauth-state`);

@@ -7,7 +7,10 @@ const commit = process.env.YOUEYE_SOURCE_COMMIT || "";
 const branch = process.env.YOUEYE_SOURCE_BRANCH || "detached";
 if (!output) throw new Error("YOUEYE_RELEASE_OUTPUT is required");
 if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error("exact source commit is required");
-if (branch !== "detached" && !/^[a-z0-9_-]+$/.test(branch)) throw new Error("invalid source branch");
+if (branch !== "detached" && (
+  branch.length > 128 || !/^[a-z0-9][a-z0-9._/-]*$/.test(branch)
+  || branch.includes("..") || branch.includes("//") || branch.endsWith("/")
+)) throw new Error("invalid source branch");
 const packageJson = JSON.parse(await readFile(resolve("package.json"), "utf8"));
 await writeFile(output, `${JSON.stringify({
   format: "product-local-release-metadata-v1",

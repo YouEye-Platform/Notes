@@ -5,6 +5,7 @@
 /** JWT session payload stored in the session cookie */
 export interface SessionPayload {
   userId: string;
+  identitySessionId: string;
   username: string;
   name: string;
   email: string;

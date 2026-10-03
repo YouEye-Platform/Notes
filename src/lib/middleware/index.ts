@@ -20,6 +20,7 @@ const DEFAULT_PUBLIC_ROUTES = [
   "/api/auth/sso",
   "/api/auth/callback",
   "/api/auth/logout",
+  "/api/auth/backchannel-logout",
   "/api/health",
   "/api/manifest",
   "/api/widgets/",
@@ -92,6 +93,18 @@ export function createCanvasMiddleware(config: MiddlewareConfig) {
 
     try {
       const { payload } = await jwtVerify(sessionCookie.value, secret);
+      if (typeof payload.userId !== "string" || typeof payload.identitySessionId !== "string") {
+        throw new Error("Missing identity session");
+      }
+      const identityBase = process.env.IDENTITY_INTERNAL_URL || process.env.IDENTITY_URL;
+      const clientId = process.env.IDENTITY_CLIENT_ID;
+      const clientSecret = process.env.IDENTITY_CLIENT_SECRET;
+      if (!identityBase || !clientId || !clientSecret) throw new Error("Identity service is unavailable");
+      const check = await fetch(`${identityBase}/identity/session/check`, {
+        headers: { 'x-youeye-expected-sub': payload.userId, 'x-youeye-expected-sid': payload.identitySessionId, 'x-youeye-client-id': clientId, 'x-youeye-client-secret': clientSecret },
+        cache: 'no-store', signal: AbortSignal.timeout(5000),
+      });
+      if (check.status !== 204) throw new Error("Identity session ended");
 
       // Cross-app logout signal check
       const logoutTs = request.cookies.get("ye-logout-ts");

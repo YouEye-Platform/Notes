@@ -8,8 +8,9 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import type { SessionPayload } from "../types";
+import { getOne } from "../db/client";
 
-const SESSION_DURATION = 60 * 60 * 24; // 24 hours
+const SESSION_DURATION = 60 * 60 * 24 * 30; // Matches the YouEye ID absolute session limit
 
 let _appId = "";
 let _cookieName = "";
@@ -54,6 +55,7 @@ export function getJWTSecretKey(): Uint8Array | null {
 
 export async function createSession(payload: {
   userId: string;
+  identitySessionId: string;
   username: string;
   name: string;
   email: string;
@@ -97,5 +99,29 @@ export async function getSession(appId?: string): Promise<SessionPayload | null>
   }
   const sessionCookie = cookieStore.get(name);
   if (!sessionCookie?.value) return null;
-  return verifySession(sessionCookie.value);
+  const session = await verifySession(sessionCookie.value);
+  if (!session?.identitySessionId || !session.userId) return null;
+  // A delivered OIDC logout invalidates the RP session even if the identity
+  // service has not yet answered this request.
+  try {
+    const revoked = await getOne<{ revoked: boolean }>(
+      `SELECT EXISTS (SELECT 1 FROM oidc_logout_events WHERE session_id = $1 AND subject = $2) AS revoked`,
+      [session.identitySessionId, session.userId],
+    );
+    if (revoked?.revoked) return null;
+  } catch (error) {
+    // Older installations create this table on their first notification.
+    if (!error || typeof error !== 'object' || !('code' in error) || error.code !== '42P01') return null;
+  }
+  const identityBase = process.env.IDENTITY_INTERNAL_URL || process.env.IDENTITY_URL;
+  const clientId = process.env.IDENTITY_CLIENT_ID;
+  const clientSecret = process.env.IDENTITY_CLIENT_SECRET;
+  if (!identityBase || !clientId || !clientSecret) return null;
+  try {
+    const check = await fetch(`${identityBase}/identity/session/check`, {
+      headers: { 'x-youeye-expected-sub': session.userId, 'x-youeye-expected-sid': session.identitySessionId, 'x-youeye-client-id': clientId, 'x-youeye-client-secret': clientSecret },
+      cache: 'no-store', signal: AbortSignal.timeout(5000),
+    });
+    return check.status === 204 ? session : null;
+  } catch { return null; }
 }
