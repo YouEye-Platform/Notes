@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getOne, getMany, query } from "@/lib/db/client";
 import { randomBytes } from "crypto";
 import { emitNoteEdited } from "@/lib/timeline/emit";
+import { validatePrivateNoteReferences } from "@/lib/notes/private-references";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -14,7 +15,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
             COALESCE(
               (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
                FROM note_tags nt JOIN tags t ON t.id = nt.tag_id
-               WHERE nt.note_id = n.id),
+               WHERE nt.note_id = n.id AND t.user_id = n.user_id),
               '[]'::json
             ) as tags
      FROM notes n WHERE n.id = $1 AND n.user_id = $2`,
@@ -45,6 +46,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 
   const body = await request.json();
+  // Tag-only updates must prove note ownership before touching relationship rows.
+  if (!await getOne("SELECT id FROM notes WHERE id = $1 AND user_id = $2", [id, session.userId])) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  const referenceStatus = await validatePrivateNoteReferences(session.userId, body);
+  if (referenceStatus) return NextResponse.json({ error: referenceStatus === 404 ? "Not found" : "Invalid note references" }, { status: referenceStatus });
 
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -82,7 +89,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   // Handle tag updates
   if (body.tag_ids !== undefined) {
-    await query("DELETE FROM note_tags WHERE note_id = $1", [id]);
+    await query("DELETE FROM note_tags WHERE note_id = $1 AND EXISTS (SELECT 1 FROM notes WHERE id = $1 AND user_id = $2)", [id, session.userId]);
     if (Array.isArray(body.tag_ids) && body.tag_ids.length > 0) {
       const tagValues = body.tag_ids.map((_: string, i: number) => `($1, $${i + 2})`).join(", ");
       await query(
@@ -98,7 +105,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             COALESCE(
               (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
                FROM note_tags nt JOIN tags t ON t.id = nt.tag_id
-               WHERE nt.note_id = n.id),
+               WHERE nt.note_id = n.id AND t.user_id = n.user_id),
               '[]'::json
             ) as tags
      FROM notes n WHERE n.id = $1 AND n.user_id = $2`,

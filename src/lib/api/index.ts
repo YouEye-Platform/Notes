@@ -1,3 +1,4 @@
+import { appServiceHeaders } from "./service-headers";
 /**
  * @youeye/canvas/api — YouEye platform API client
  *
@@ -42,18 +43,12 @@ export interface YouEyeApiClient {
 }
 
 export function createApiClient(appId: string): YouEyeApiClient {
-  const platformAppId = process.env.YOUEYE_APP_ID || appId.replace(/^ye-/, "");
+  const platformAppId = process.env.YOUEYE_APP_ID || appId;
 
   async function youeyeFetch(path: string, options: RequestInit = {}, userId?: string): Promise<Response> {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      "X-YouEye-App": platformAppId,
-      ...(options.headers as Record<string, string>),
-    };
-    if (userId) headers["X-YouEye-User"] = userId;
-    const appToken = process.env.YOUEYE_APP_TOKEN;
-    if (appToken) headers["Authorization"] = `Bearer ${appToken}`;
-    return fetch(`${getYouEyeApiUrl()}${path}`, { ...options, headers });
+    const headers = appServiceHeaders(options.headers, userId);
+    if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+    return fetch(`${getYouEyeApiUrl()}${path}`, { ...options, headers, redirect: "error" });
   }
 
   return {

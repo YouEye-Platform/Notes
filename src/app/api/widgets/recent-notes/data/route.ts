@@ -1,11 +1,14 @@
+import { getSession } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getMany } from "@/lib/db/client";
 import { runMigrations } from "@/lib/db/migrate";
 
 export async function GET(request: Request) {
-  await runMigrations();
   const url = new URL(request.url);
-  const userId = request.headers.get("x-youeye-user");
+  const session = await getSession("ye-notes");
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  await runMigrations();
+  const userId = session.userId;
   if (!userId) return NextResponse.json({ items: [] });
 
   const notes = await getMany(

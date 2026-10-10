@@ -100,13 +100,14 @@ export async function getSession(appId?: string): Promise<SessionPayload | null>
   const sessionCookie = cookieStore.get(name);
   if (!sessionCookie?.value) return null;
   const session = await verifySession(sessionCookie.value);
-  if (!session?.identitySessionId || !session.userId) return null;
+  if (!session?.identitySessionId || !session.userId || !Number.isSafeInteger(session.iat) || Number(session.iat) <= 0) return null;
   // A delivered OIDC logout invalidates the RP session even if the identity
   // service has not yet answered this request.
   try {
     const revoked = await getOne<{ revoked: boolean }>(
-      `SELECT EXISTS (SELECT 1 FROM oidc_logout_events WHERE session_id = $1 AND subject = $2) AS revoked`,
-      [session.identitySessionId, session.userId],
+      `SELECT EXISTS (SELECT 1 FROM oidc_logout_events e WHERE session_id = $1 AND subject = $2
+        AND (to_jsonb(e)->>'issued_at' IS NULL OR (to_jsonb(e)->>'issued_at')::bigint >= $3)) AS revoked`,
+      [session.identitySessionId, session.userId, session.iat],
     );
     if (revoked?.revoked) return null;
   } catch (error) {
@@ -119,7 +120,7 @@ export async function getSession(appId?: string): Promise<SessionPayload | null>
   if (!identityBase || !clientId || !clientSecret) return null;
   try {
     const check = await fetch(`${identityBase}/identity/session/check`, {
-      headers: { 'x-youeye-expected-sub': session.userId, 'x-youeye-expected-sid': session.identitySessionId, 'x-youeye-client-id': clientId, 'x-youeye-client-secret': clientSecret },
+      headers: { 'x-youeye-expected-sub': session.userId, 'x-youeye-expected-sid': session.identitySessionId, 'x-youeye-session-issued-at': String(session.iat), 'x-youeye-client-id': clientId, 'x-youeye-client-secret': clientSecret },
       cache: 'no-store', signal: AbortSignal.timeout(5000),
     });
     return check.status === 204 ? session : null;

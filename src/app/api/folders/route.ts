@@ -9,7 +9,7 @@ export async function GET() {
   await runMigrations();
 
   const folders = await getMany(
-    "SELECT f.*, (SELECT COUNT(*) FROM notes n WHERE n.folder_id = f.id) as note_count FROM folders f WHERE f.user_id = $1 ORDER BY f.sort_order, f.name",
+    "SELECT f.*, (SELECT COUNT(*) FROM notes n WHERE n.folder_id = f.id AND n.user_id = f.user_id) as note_count FROM folders f WHERE f.user_id = $1 ORDER BY f.sort_order, f.name",
     [session.userId]
   );
   return NextResponse.json({ data: folders });

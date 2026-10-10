@@ -10,6 +10,8 @@ if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error("exact source commit is requ
 if (branch !== "detached" && (
   branch.length > 128 || !/^[a-z0-9][a-z0-9._/-]*$/.test(branch)
   || branch.includes("..") || branch.includes("//") || branch.endsWith("/")
+  || branch.endsWith(".")
+  || branch.split("/").some(part => part.startsWith(".") || part.endsWith(".lock"))
 )) throw new Error("invalid source branch");
 const packageJson = JSON.parse(await readFile(resolve("package.json"), "utf8"));
 await writeFile(output, `${JSON.stringify({

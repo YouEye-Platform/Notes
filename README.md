@@ -62,3 +62,38 @@ See [PUBLIC_RELEASE_POLICY.md](PUBLIC_RELEASE_POLICY.md) for publication rules.
 YouEye source code is licensed under the [Business Source License 1.1](LICENSE). Each version converts to AGPL-3.0 after four years.
 
 The "YouEye" name and logo are trademarks. See [TRADEMARK.md](TRADEMARK.md) for usage guidelines.
+
+## Acting user and household admission
+
+Private routes derive the acting identity from `getSession(appId)`, which checks
+the native cookie and current identity session through the configured client.
+Never use a browser-supplied `X-YouEye-User`, `userId` or `user_id` to select
+private rows or nominate the user of a platform service call. Household admission
+and per-user service consent are separate checks; administrative status does not
+grant access to every app.
+
+Every note mutation, including tag-only changes, verifies the note's owner.
+Private folder and tag references must belong to that same identity. Reads also
+filter tag relationships and folder counts by owner, including historical rows.
+
+Widget, card and inter-app routes require a native session. Inter-app factories
+receive an explicit app ID and pass `{ userId }` as the second handler argument;
+user fields are removed from request data. A server-to-server caller without a
+validated native session is denied. Header/body identity nomination is not a
+supported delegation protocol. Existing explicitly public shares and public
+content remain distinct from private routes, and external public exposure must
+be chosen by the appliance administrator.
+## App service credentials
+
+Platform calls run on the server with the protected `YOUEYE_APP_ID`,
+`YOUEYE_APP_TOKEN` and `YOUEYE_GATEWAY` values injected by the installer.
+The app ID is the exact installed ID; helpers do not invent prefix aliases.
+A missing credential fails with an integration-not-ready error. Use Market's
+administrator credential reconciliation action to repair delivery.
+
+Pass the acting user from a validated server session. Caller-supplied headers
+cannot replace machine identity, select another user, or attach a browser/bridge
+credential. Keep platform helpers in server code and keep runtime credentials
+out of source, browser bundles and logs. Public health/manifests do not need a
+service credential. Rotation and restore reinject a credential and prove it
+before marking integration ready.

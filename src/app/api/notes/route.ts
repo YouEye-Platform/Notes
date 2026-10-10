@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getMany, getOne, query } from "@/lib/db/client";
 import { runMigrations } from "@/lib/db/migrate";
 import { emitNoteCreated } from "@/lib/timeline/emit";
+import { validatePrivateNoteReferences } from "@/lib/notes/private-references";
 
 export async function GET(request: Request) {
   const session = await getSession();
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
             COALESCE(
               (SELECT json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color))
                FROM note_tags nt JOIN tags t ON t.id = nt.tag_id
-               WHERE nt.note_id = n.id),
+               WHERE nt.note_id = n.id AND t.user_id = n.user_id),
               '[]'::json
             ) as tags
      FROM notes n ${where}
@@ -81,6 +82,8 @@ export async function POST(request: Request) {
   await runMigrations();
 
   const body = await request.json();
+  const referenceStatus = await validatePrivateNoteReferences(session.userId, body);
+  if (referenceStatus) return NextResponse.json({ error: referenceStatus === 404 ? "Not found" : "Invalid note references" }, { status: referenceStatus });
   const {
     title = "",
     content = "",

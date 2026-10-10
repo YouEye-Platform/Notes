@@ -1,14 +1,17 @@
+import { getSession } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getMany } from "@/lib/db/client";
 import { runMigrations } from "@/lib/db/migrate";
 
 export async function POST(request: Request) {
+  const session = await getSession("ye-notes");
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await runMigrations();
   const body = await request.json();
   const { request_type, data } = body;
 
   if (request_type === "search" && data?.query) {
-    const userId = data.user_id;
+    const userId = session.userId;
     if (!userId) return NextResponse.json({ results: [] });
 
     const results = await getMany(

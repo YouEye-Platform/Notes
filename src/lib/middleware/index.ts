@@ -23,9 +23,6 @@ const DEFAULT_PUBLIC_ROUTES = [
   "/api/auth/backchannel-logout",
   "/api/health",
   "/api/manifest",
-  "/api/widgets/",
-  "/api/cards/",
-  "/api/inter-app/",
 ];
 
 const STATIC_PATTERNS = ["/_next/", "/favicon.ico", "/icons/", "/sw.js", "/serwist-", "/manifest.webmanifest", "/offline"];
@@ -67,7 +64,7 @@ export function createCanvasMiddleware(config: MiddlewareConfig) {
     }
 
     // Allow public routes
-    if (publicRoutes.some((r) => pathname === r || pathname.startsWith(r))) {
+    if (publicRoutes.some((r) => pathname === r || (r.endsWith("/") && pathname.startsWith(r)))) {
       return NextResponse.next();
     }
 
@@ -88,12 +85,13 @@ export function createCanvasMiddleware(config: MiddlewareConfig) {
     // Verify JWT
     const secret = getJWTSecret();
     if (!secret) {
-      return NextResponse.next();
+      return NextResponse.json({ error: "Authentication unavailable" }, { status: 503 });
     }
 
     try {
       const { payload } = await jwtVerify(sessionCookie.value, secret);
-      if (typeof payload.userId !== "string" || typeof payload.identitySessionId !== "string") {
+      if (typeof payload.userId !== "string" || typeof payload.identitySessionId !== "string"
+        || !Number.isSafeInteger(payload.iat) || Number(payload.iat) <= 0) {
         throw new Error("Missing identity session");
       }
       const identityBase = process.env.IDENTITY_INTERNAL_URL || process.env.IDENTITY_URL;
@@ -101,7 +99,7 @@ export function createCanvasMiddleware(config: MiddlewareConfig) {
       const clientSecret = process.env.IDENTITY_CLIENT_SECRET;
       if (!identityBase || !clientId || !clientSecret) throw new Error("Identity service is unavailable");
       const check = await fetch(`${identityBase}/identity/session/check`, {
-        headers: { 'x-youeye-expected-sub': payload.userId, 'x-youeye-expected-sid': payload.identitySessionId, 'x-youeye-client-id': clientId, 'x-youeye-client-secret': clientSecret },
+        headers: { 'x-youeye-expected-sub': payload.userId, 'x-youeye-expected-sid': payload.identitySessionId, 'x-youeye-session-issued-at': String(payload.iat), 'x-youeye-client-id': clientId, 'x-youeye-client-secret': clientSecret },
         cache: 'no-store', signal: AbortSignal.timeout(5000),
       });
       if (check.status !== 204) throw new Error("Identity session ended");

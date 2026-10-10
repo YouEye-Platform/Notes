@@ -1,7 +1,9 @@
 apiVersion: v1
 kind: app
 integration: native
-version: 0.5.2
+data_ownership:
+  per_user: identity_uuid
+version: 0.5.3
 surfaceSchemaVersion: 1
 metadata:
   id: "notes"
