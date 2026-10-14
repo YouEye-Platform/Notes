@@ -15,7 +15,7 @@ test("source provenance accepts scoped task refs without relaxing publication ta
       YOUEYE_SOURCE_COMMIT: commit, YOUEYE_SOURCE_BRANCH: branch },
   });
   try {
-    for (const branch of ["main", "dev", "detached", "agent/developer/task_123"]) {
+    for (const branch of ["main", "dev", "detached", "agent/developer/task_123", "Team/Fix"]) {
       assert.equal(run(branch).status, 0, branch);
       const manifest = JSON.parse(await readFile(output, "utf8"));
       assert.equal(manifest.branch, branch);
@@ -25,7 +25,7 @@ test("source provenance accepts scoped task refs without relaxing publication ta
     for (const branch of ["/main", "main/", "agent//task", "agent/../main", "main.lock", "agent/main.lock/task", "agent/.hidden/task", "main.", "main\nbeta", "HEAD@{1}"]) {
       const result = run(branch);
       assert.notEqual(result.status, 0, branch);
-      assert.match(result.stderr, /invalid source branch/);
+      assert.match(result.stderr, /invalid (?:source|Git) branch/);
     }
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

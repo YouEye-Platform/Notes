@@ -4,7 +4,7 @@ Markdown note-taking app for the [YouEye](https://github.com/YouEye-Platform/You
 
 Notes runs as a native YouEye app. It provides local note storage, dashboard widgets, notification surfaces, and a settings panel that is embedded inside YouEye Settings.
 
-Current development source version: `0.4.5.1.0.2`
+The version in `package.json` and `youeye-app.yaml` is the exact source version.
 
 ## Features
 

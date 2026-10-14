@@ -3,7 +3,7 @@ kind: app
 integration: native
 data_ownership:
   per_user: identity_uuid
-version: 0.5.3
+version: 0.5.6
 surfaceSchemaVersion: 1
 metadata:
   id: "notes"

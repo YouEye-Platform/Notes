@@ -6,15 +6,14 @@ import { fileURLToPath } from "node:url";
 
 const defaultRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const root = resolve(process.env.YOUEYE_RELEASE_ROOT || defaultRoot);
-const versionPattern = /^(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*)){0,9}$/;
-const branchPattern = /^[a-z0-9_-]+$/;
+import { isReleaseVersion, isHistoricalVersion, validateReleaseBranch } from "./release-version.mjs";
 
 function validateVersion(version) {
-  if (!versionPattern.test(version)) throw new Error("version must contain 1-10 numeric segments without leading zeroes");
+  if (!isReleaseVersion(version) && !isHistoricalVersion(version)) throw new Error("invalid release version; expected X.Y.Z[-token.N] without leading zeroes");
 }
 
 export function expectedTag(branch, version) {
-  if (!branchPattern.test(branch)) throw new Error("branch must use lowercase letters, digits, underscores, or hyphens");
+  validateReleaseBranch(branch);
   validateVersion(version);
   return branch === "main" ? `v${version}` : `${branch}-v${version}`;
 }

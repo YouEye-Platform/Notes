@@ -555,7 +555,7 @@ export default function NoteEditorPage() {
       )}
 
       {/* Editor Toolbar */}
-      <div className="flex items-center gap-1 mb-4 pb-3 border-b border-border/40">
+      <div className="flex flex-wrap items-center gap-x-1 gap-y-2 mb-4 pb-3 border-b border-border/40">
         {/* Note type toggle */}
         <Button
           variant="ghost"
@@ -666,7 +666,7 @@ export default function NoteEditorPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-3 ml-auto text-xs text-muted-foreground">
+        <div className="flex shrink-0 items-center gap-3 ml-auto whitespace-nowrap text-xs text-muted-foreground">
           <span>{wordCount} {wordCount === 1 ? "word" : "words"}</span>
           <span>{charCount} {charCount === 1 ? "char" : "chars"}</span>
         </div>
