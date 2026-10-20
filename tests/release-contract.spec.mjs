@@ -30,7 +30,7 @@ test("source-owned build contract uses the supported unsigned standalone profile
   assert.equal(manifest.network.mode, "deny");
   assert.deepEqual(manifest.network.external_inputs, []);
   assert.deepEqual(manifest.unsigned_outputs.map(({ name }) => name), ["standalone.tar"]);
-  assert.equal(manifest.validation_profile, "next-standalone-v1");
+  assert.equal(manifest.validation_profile, "next-node24-standalone-v2");
   assert.equal(manifest.publication_lane, "development");
   assert.match(entrypoint, /--frozen-lockfile --offline/);
   assert.doesNotMatch(entrypoint + helper, /openssl|gpg|forgejo|github api|publish/);

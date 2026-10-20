@@ -1,9 +1,8 @@
 import { getRequestConfig } from "next-intl/server";
+import { resolveAppLocale } from "../lib/locale";
 
-export default getRequestConfig(async () => {
-  const locale = "en";
-  return {
-    locale,
-    messages: {},
-  };
-});
+// Root layout supplies the locale from its authenticated header response.
+export default getRequestConfig(async ({ requestLocale }) => ({
+  locale: resolveAppLocale(await requestLocale),
+  messages: {},
+}));

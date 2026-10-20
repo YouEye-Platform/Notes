@@ -1,6 +1,6 @@
 declare module "playwright" {
   export interface ResponseLike {
-    json(): Promise<any>;
+    json(): Promise<{ status?: string; app?: string; database?: string; id?: string; name?: string; surfaces?: { kind: string }[] }>;
     url(): string;
   }
 
@@ -12,7 +12,7 @@ declare module "playwright" {
   export interface Page {
     goto(url: string, options?: Record<string, unknown>): Promise<ResponseLike | null>;
     locator(selector: string): Locator;
-    evaluate<T = any>(fn: (...args: any[]) => T | Promise<T>, ...args: any[]): Promise<T>;
+    evaluate<T, Args extends unknown[]>(fn: (...args: Args) => T | Promise<T>, ...args: Args): Promise<T>;
     screenshot(options: { path: string }): Promise<void>;
   }
 

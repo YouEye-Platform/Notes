@@ -1,3 +1,5 @@
+
+import Link from "next/link";
 /**
  * AppHeader — the universal YouEye header, identical across the UI, Settings,
  * and every native app. The ONLY thing that differs per app is the top-left
@@ -152,11 +154,11 @@ export async function AppHeader({
   return (
     <>
       <header className="ye-mobile-top-header sticky top-0 z-50 grid h-14 grid-cols-[minmax(0,1fr)_minmax(0,640px)_minmax(0,1fr)] items-center gap-3 border-b border-border/40 bg-background/95 px-4 backdrop-blur-md">
-        <a
+        <Link
           href="/"
           className="flex min-w-0 items-center justify-start gap-2 font-semibold text-foreground hover:text-foreground/80 transition-colors"
           title={displayName}
-        >
+         prefetch={false}>
           {displayMode !== "text-only" && renderedIcon}
           {displayMode !== "icon-only" &&
             (brandingCss ? (
@@ -169,7 +171,7 @@ export async function AppHeader({
             ) : (
               <span>{displayName}</span>
             ))}
-        </a>
+        </Link>
 
         <div className="ye-mobile-top-center flex min-w-0 items-center justify-center">{centerContent}</div>
 

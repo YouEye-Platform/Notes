@@ -78,6 +78,8 @@ export interface SettingsField {
 
 /** Header config returned by YE-UI /api/v1/header/config */
 export interface HeaderConfig {
+  /** Resolved personal > instance > English locale from the profile-scoped header. */
+  locale?: string;
   branding?: {
     site_name?: string;
     site_name_css?: Record<string, unknown> | null;

@@ -3,7 +3,7 @@ kind: app
 integration: native
 data_ownership:
   per_user: identity_uuid
-version: 0.5.6
+version: 0.5.12
 surfaceSchemaVersion: 1
 metadata:
   id: "notes"
@@ -152,7 +152,7 @@ containers:
     network: isolated
     source:
       repo: potemsla/YE-App-Notes
-      nodeVersion: "22.x"
+      nodeVersion: "24.x"
       appDir: /opt/app
     healthCheck:
       type: http

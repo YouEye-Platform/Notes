@@ -60,7 +60,7 @@ async function run() {
     const body = await res!.json();
     assert(body.id === "ye-notes", `Expected id ye-notes, got ${body.id}`);
     assert(body.name === "Notes", `Expected name Notes, got ${body.name}`);
-    assert(body.surfaces?.some((surface: { kind: string }) => surface.kind === "widget"), "Expected at least one widget surface");
+    assert(body.surfaces?.some((surface: { kind: string }) => surface.kind === "widget") === true, "Expected at least one widget surface");
   });
 
   await test("SSO redirect works via Canvas factory", async () => {

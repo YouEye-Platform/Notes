@@ -79,9 +79,9 @@ test("service worker uses Serwist instead of hand-rolled install precaching", ()
   const sw = read("src/app/sw.ts");
 
   assert.ok(sw.includes("new Serwist("));
-  assert.ok(sw.includes("precacheEntries: self.__SW_MANIFEST ?? []"));
+  assert.ok(sw.includes("precacheEntries: (self.__SW_MANIFEST ?? []).filter"));
   assert.ok(sw.includes("serwist.addEventListeners()"));
-  assert.ok(sw.includes("LEGACY_CACHE_PREFIXES"));
+  assert.ok(sw.includes("legacyPrefixes"));
   assert.ok(!sw.includes('self.addEventListener("install"'));
   assert.ok(!sw.includes("PRECACHE_ENTRIES.map"));
   assert.ok(!sw.includes("event.respondWith"));
