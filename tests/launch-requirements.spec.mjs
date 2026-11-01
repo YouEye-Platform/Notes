@@ -24,7 +24,7 @@ test("Notes surfaces launch requirements before using declared permissions", () 
   assert.match(layout, /api\.getLaunchRequirements\(session\.userId, process\.env\.NOTES_EXTERNAL_URL/);
   assert.match(layout, /LaunchRequirementsBanner appName="Notes"/);
   assert.match(banner, /approval_url_absolute/);
-  assert.match(banner, /needs permission to finish setup/);
+  assert.match(banner, /translateInterface\("m314362d535e4", \{ app: appName \}\)/);
   assert.match(health, /packageJson\.version/);
   assert.match(types, /export interface LaunchRequirements/);
 });

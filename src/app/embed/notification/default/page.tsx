@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Bell, StickyNote } from "lucide-react";
@@ -20,6 +21,8 @@ export default function NotificationEmbedPage() {
 }
 
 function NotificationEmbedContent() {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const params = useSearchParams();
   const notificationId = params.get("notification_id");
   const [notification, setNotification] = useState<NotificationData | null>(null);
@@ -45,9 +48,9 @@ function NotificationEmbedContent() {
   }, [notificationId]);
 
   const message = useMemo(() => {
-    if (loading) return "Loading notification...";
-    return notification?.message || "Open Notes to view this reminder.";
-  }, [loading, notification?.message]);
+    if (loading) return translateInterface("m905a17a354d2");
+    return notification?.message || translateInterface("m21c953b6f840");
+  }, [loading, notification?.message, translateInterface]);
 
   return (
     <div className="rounded-xl border border-border bg-card p-3 text-foreground">
@@ -56,7 +59,7 @@ function NotificationEmbedContent() {
           {notification ? <StickyNote className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold">{notification?.title || "Notes notification"}</h3>
+          <h3 className="truncate text-sm font-semibold">{notification?.title || translateInterface("ma27c7457585c")}</h3>
           <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">{message}</p>
         </div>
       </div>
@@ -65,6 +68,8 @@ function NotificationEmbedContent() {
 }
 
 function NotificationCardFallback() {
+  const translateInterface = useInterfaceTranslations("interface");
+
   return (
     <div className="rounded-xl border border-border bg-card p-3 text-foreground">
       <div className="flex gap-3">
@@ -72,8 +77,8 @@ function NotificationCardFallback() {
           <Bell className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold">Notes notification</h3>
-          <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">Loading notification...</p>
+          <h3 className="truncate text-sm font-semibold">{translateInterface("ma27c7457585c")}</h3>
+          <p className="mt-1 line-clamp-3 text-sm text-muted-foreground">{translateInterface("m905a17a354d2")}</p>
         </div>
       </div>
     </div>

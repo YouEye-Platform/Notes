@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -11,14 +12,16 @@ interface Settings {
   readonly editor_font_size: FontSize;
 }
 
-const FONT_SIZE_OPTIONS: readonly { readonly value: FontSize; readonly label: string }[] = [
-  { value: "small", label: "Small" },
-  { value: "medium", label: "Medium" },
-  { value: "large", label: "Large" },
-  { value: "xl", label: "XL" },
+const FONT_SIZE_OPTIONS: readonly { readonly value: FontSize; readonly labelKey: string }[] = [
+  { value: "small", labelKey: "m5263293fc202" },
+  { value: "medium", labelKey: "m8e588cd18774" },
+  { value: "large", labelKey: "mab80540d98d2" },
+  { value: "xl", labelKey: "mf365705bb061" },
 ];
 
 export function NotesSettingsPanel({ embedded = false }: { embedded?: boolean }) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const router = useRouter();
   const [settings, setSettings] = useState<Settings>({ editor_font_size: "medium" });
   const [loading, setLoading] = useState(true);
@@ -68,16 +71,15 @@ export function NotesSettingsPanel({ embedded = false }: { embedded?: boolean })
         <div className="mb-8">
           <Button variant="ghost" size="sm" onClick={() => router.push("/")} className="mb-4 gap-1">
             <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <p className="mt-1 text-muted-foreground">Customize your Notes experience.</p>
+            {translateInterface("m76900f1bfd16")}</Button>
+          <h1 className="text-2xl font-bold text-foreground">{translateInterface("m74a883a037bc")}</h1>
+          <p className="mt-1 text-muted-foreground">{translateInterface("m24fd20c2a12c")}</p>
         </div>
       )}
 
       <div className="rounded-xl border border-border/60 bg-card p-6">
-        <h2 className="mb-1 text-sm font-semibold text-foreground">Editor Font Size</h2>
-        <p className="mb-4 text-xs text-muted-foreground">Choose the font size for the note editor.</p>
+        <h2 className="mb-1 text-sm font-semibold text-foreground">{translateInterface("macaeb32ddf4b")}</h2>
+        <p className="mb-4 text-xs text-muted-foreground">{translateInterface("m41836efba162")}</p>
 
         <div className="flex gap-2">
           {FONT_SIZE_OPTIONS.map((option) => (
@@ -90,7 +92,7 @@ export function NotesSettingsPanel({ embedded = false }: { embedded?: boolean })
                   : "border-border/60 text-foreground hover:bg-accent/50"
               }`}
             >
-              {option.label}
+              {translateInterface(option.labelKey)}
             </button>
           ))}
         </div>
@@ -98,8 +100,7 @@ export function NotesSettingsPanel({ embedded = false }: { embedded?: boolean })
         {saving && (
           <p className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" />
-            Saving...
-          </p>
+            {translateInterface("mdc85af8f2b1d")}</p>
         )}
       </div>
     </div>

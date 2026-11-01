@@ -1,3 +1,4 @@
+import { getActivityTranslator } from "@/i18n/activity";
 /**
  * Notes Timeline Event Emitters
  *
@@ -8,6 +9,7 @@
  *   - tags: machine-readable metadata for filtering
  *
  * Debounced per userId+key to prevent duplicate entries.
+ * Capture time before locale lookup; callers may supply an earlier action time.
  */
 
 import { createApiClient } from "@/lib/api";
@@ -53,18 +55,21 @@ export async function emitNoteCreated(
   userId: string,
   noteId: string,
   title: string,
-  content: string
+  content: string,
+  timestamp: string = new Date().toISOString()
 ): Promise<void> {
+  const { t } = await getActivityTranslator(userId);
   const snippet = content.replace(/[#*_`~>\[\]()!]/g, "").slice(0, 200);
 
   await emitIfNotDebounced(userId, `created:${noteId}`, "history", {
+    timestamp,
     app_id: "notes",
     entry_type: "notes-note-created",
-    title: `Created note: ${title || "Untitled"}`,
+    title: t("m917231a34137", {title: title || t("mf59ab8d1331b")}),
     embed_path: `/embed/timeline/note?id=${noteId}&action=created`,
     tags: { note_id: noteId },
     data: {
-      description: snippet || "New note",
+      description: snippet || t("m76ea482f843e"),
       url: `/notes/${noteId}`,
     },
   });
@@ -76,18 +81,21 @@ export async function emitNoteEdited(
   userId: string,
   noteId: string,
   title: string,
-  content: string
+  content: string,
+  timestamp: string = new Date().toISOString()
 ): Promise<void> {
+  const { t } = await getActivityTranslator(userId);
   const snippet = content.replace(/[#*_`~>\[\]()!]/g, "").slice(0, 200);
 
   await emitIfNotDebounced(userId, `edited:${noteId}`, "history", {
+    timestamp,
     app_id: "notes",
     entry_type: "notes-note-edited",
-    title: `Edited note: ${title || "Untitled"}`,
+    title: t("m78f81279ff9a", {title: title || t("mf59ab8d1331b")}),
     embed_path: `/embed/timeline/note?id=${noteId}&action=edited`,
     tags: { note_id: noteId },
     data: {
-      description: snippet || "Note updated",
+      description: snippet || t("mb98cfc06434c"),
       url: `/notes/${noteId}`,
     },
   });

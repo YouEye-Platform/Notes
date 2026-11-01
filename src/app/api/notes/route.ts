@@ -77,6 +77,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const timestamp = new Date().toISOString();
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await runMigrations();
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
     );
   }
 
-  emitNoteCreated(session.userId, n.id, n.title, n.content).catch(() => {});
+  emitNoteCreated(session.userId, n.id, n.title, n.content, timestamp).catch(() => {});
 
   return NextResponse.json({ data: note }, { status: 201 });
 }

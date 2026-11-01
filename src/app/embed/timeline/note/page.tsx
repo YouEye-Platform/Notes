@@ -1,3 +1,4 @@
+import { getTranslations as getInterfaceTranslations } from "next-intl/server";
 /**
  * Notes Timeline Embed — Note Card
  *
@@ -18,11 +19,13 @@ interface PageProps {
 }
 
 export default async function TimelineNotePage({ searchParams }: PageProps) {
+  const translateInterface = await getInterfaceTranslations("interface");
+
   const params = await searchParams;
   const { id, action = "created" } = params;
 
   if (!id) {
-    return <ErrorCard message="No note specified" />;
+    return <ErrorCard message={translateInterface("mdb0f68553031")} />;
   }
 
   try {
@@ -33,17 +36,17 @@ export default async function TimelineNotePage({ searchParams }: PageProps) {
     );
 
     if (!note) {
-      return <ErrorCard message="Note not found" />;
+      return <ErrorCard message={translateInterface("m233e5d18a508")} />;
     }
 
     const n = note as { id: string; title: string; content: string; updated_at: string };
-    const title = n.title || "Untitled";
+    const title = n.title || translateInterface("mf59ab8d1331b");
     const snippet = (n.content || "")
       .replace(/[#*_`~>\[\]()!]/g, "")
       .slice(0, 140);
     const isEdit = action === "edited";
     const Icon = isEdit ? FilePen : StickyNote;
-    const label = isEdit ? "Edited Note" : "Created Note";
+    const label = isEdit ? translateInterface("maad751f4166d") : translateInterface("m68e96d9a520c");
     const color = isEdit ? "text-amber-500" : "text-emerald-500";
 
     return (
@@ -73,7 +76,7 @@ export default async function TimelineNotePage({ searchParams }: PageProps) {
       </div>
     );
   } catch {
-    return <ErrorCard message="Failed to load note" />;
+    return <ErrorCard message={translateInterface("mde98f8878f0d")} />;
   }
 }
 

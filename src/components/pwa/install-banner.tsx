@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 /**
  * PWA Install Banner — Generic for Canvas apps
  *
@@ -21,6 +22,8 @@ interface InstallBannerProps {
 }
 
 export function InstallBanner({ appName, dismissKey }: InstallBannerProps) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const storageKey = dismissKey || `ye-pwa-install-dismissed-${appName.toLowerCase()}`;
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
@@ -67,21 +70,19 @@ export function InstallBanner({ appName, dismissKey }: InstallBannerProps) {
         </svg>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground">Install {appName}</p>
+        <p className="text-sm font-medium text-foreground">{translateInterface("m569ca49f4aaf")}{" "}{appName}</p>
         <p className="text-xs text-muted-foreground truncate">
-          Add to home screen for quick access
-        </p>
+          {translateInterface("m1eba1ff7d374")}</p>
       </div>
       <button
         onClick={handleInstall}
         className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
       >
-        Install
-      </button>
+        {translateInterface("m569ca49f4aaf")}</button>
       <button
         onClick={handleDismiss}
         className="shrink-0 rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="Dismiss"
+        aria-label={translateInterface("m48845bff334a")}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="18" y1="6" x2="6" y2="18" />

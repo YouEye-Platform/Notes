@@ -26,6 +26,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const timestamp = new Date().toISOString();
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
@@ -114,7 +115,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   if (body.title !== undefined || body.content !== undefined) {
     const n = fullNote as { id: string; title: string; content: string };
-    emitNoteEdited(session.userId, n.id, n.title, n.content).catch(() => {});
+    emitNoteEdited(session.userId, n.id, n.title, n.content, timestamp).catch(() => {});
   }
 
   return NextResponse.json({ data: fullNote });

@@ -1,8 +1,11 @@
+"use client";
+
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 /**
  * Home Button — Links back to the YE-UI dashboard.
  */
 
-"use client";
+
 
 import { Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +15,8 @@ interface HomeButtonProps {
 }
 
 export function HomeButton({ uiBaseUrl }: HomeButtonProps) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   let href = uiBaseUrl;
   if (!href && typeof window !== "undefined") {
     const host = window.location.hostname;
@@ -30,7 +35,7 @@ export function HomeButton({ uiBaseUrl }: HomeButtonProps) {
       className="h-9 w-9"
       asChild
     >
-      <a href={href} title="Home">
+      <a href={href} title={translateInterface("m3a78695388b3")}>
         <Home className="h-4 w-4" />
       </a>
     </Button>

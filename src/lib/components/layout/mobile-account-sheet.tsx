@@ -1,5 +1,7 @@
 "use client";
 
+
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ElementType } from "react";
 import {
@@ -104,6 +106,8 @@ export function MobileAccountSheet({
   platformItems,
   appItems,
 }: MobileAccountSheetProps) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const [open, setOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<SheetSection>(null);
   const [mode, setMode] = useState<"light" | "dark">("light");
@@ -189,9 +193,9 @@ export function MobileAccountSheet({
   };
 
   const themes: { m: ThemeMode; Icon: ElementType; label: string }[] = [
-    { m: "light", Icon: Sun, label: "Light" },
-    { m: "dark", Icon: Moon, label: "Dark" },
-    { m: "system", Icon: Monitor, label: "Auto" },
+    { m: "light", Icon: Sun, label: translateInterface("mdbcd5e7bb7a0") },
+    { m: "dark", Icon: Moon, label: translateInterface("m60acc53f13a5") },
+    { m: "system", Icon: Monitor, label: translateInterface("m0286249762f7") },
   ];
 
   return (
@@ -199,7 +203,7 @@ export function MobileAccountSheet({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Account menu"
+        aria-label={translateInterface("m7fb5995bca43")}
         className="relative inline-flex size-12 items-center justify-center rounded-2xl transition-colors hover:bg-accent"
       >
         <span className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold">
@@ -221,16 +225,16 @@ export function MobileAccountSheet({
         <div className="fixed inset-0 z-[100] text-foreground">
           <button
             type="button"
-            aria-label="Close account sheet"
+            aria-label={translateInterface("m3313b27c5473")}
             className="absolute inset-0 bg-background/45 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
           <div className="fixed inset-x-0 bottom-0 max-h-[88dvh] overflow-y-auto rounded-t-3xl border border-border/60 bg-popover/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-2xl backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between px-1">
-              <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Account</span>
+              <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">{translateInterface("m7e1b0d5641f2")}</span>
               <button
                 type="button"
-                aria-label="Close"
+                aria-label={translateInterface("m7d9eb7acb13e")}
                 onClick={() => setOpen(false)}
                 className="grid size-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               >
@@ -250,7 +254,7 @@ export function MobileAccountSheet({
                   )}
                 </span>
                 <div className="flex items-center gap-1.5 text-base font-medium">
-                  <span>Hi, {firstName}!</span>
+                  <span>{translateInterface("greeting", { name: firstName })}</span>
                   {isAdmin && <Shield className="size-3.5 text-primary" />}
                 </div>
               </div>
@@ -258,19 +262,19 @@ export function MobileAccountSheet({
 
             {base && (
               <div className="mt-3 overflow-hidden rounded-2xl border border-border/50 bg-card/60">
-                <SectionButton section="notifications" activeSection={activeSection} label="Notifications" Icon={Bell} onOpen={setActiveSection} />
+                <SectionButton section="notifications" activeSection={activeSection} label={translateInterface("m788011833a5a")} Icon={Bell} onOpen={setActiveSection} />
                 {activeSection === "notifications" && (
-                  <iframe title="YouEye notifications" src={embedSrc("notifications")} className="h-[380px] w-full border-t bg-transparent" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation-by-user-activation" allow="clipboard-read; clipboard-write" />
+                  <iframe title={translateInterface("m75dfa5195a9a")} src={embedSrc("notifications")} className="h-[380px] w-full border-t bg-transparent" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation-by-user-activation" allow="clipboard-read; clipboard-write" />
                 )}
                 <div className="border-t" />
-                <SectionButton section="drawer" activeSection={activeSection} label="App drawer" Icon={LayoutGrid} onOpen={setActiveSection} />
+                <SectionButton section="drawer" activeSection={activeSection} label={translateInterface("md18accaf2b74")} Icon={LayoutGrid} onOpen={setActiveSection} />
                 {activeSection === "drawer" && (
-                  <iframe title="YouEye app drawer" src={embedSrc("drawer")} className="h-[380px] w-full border-t bg-transparent" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation-by-user-activation" allow="clipboard-read; clipboard-write" />
+                  <iframe title={translateInterface("m2d8e7167eaf1")} src={embedSrc("drawer")} className="h-[380px] w-full border-t bg-transparent" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation-by-user-activation" allow="clipboard-read; clipboard-write" />
                 )}
                 <div className="border-t" />
-                <SectionButton section="launcher" activeSection={activeSection} label="Launcher" Icon={LayoutGrid} onOpen={setActiveSection} />
+                <SectionButton section="launcher" activeSection={activeSection} label={translateInterface("m22614ace1aef")} Icon={LayoutGrid} onOpen={setActiveSection} />
                 {activeSection === "launcher" && (
-                  <iframe title="YouEye launcher" src={embedSrc("launcher")} className="h-[460px] w-full border-t bg-transparent" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation-by-user-activation" allow="clipboard-read; clipboard-write" />
+                  <iframe title={translateInterface("m0525f011a69f")} src={embedSrc("launcher")} className="h-[460px] w-full border-t bg-transparent" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation-by-user-activation" allow="clipboard-read; clipboard-write" />
                 )}
               </div>
             )}
@@ -280,8 +284,7 @@ export function MobileAccountSheet({
                 <>
                   <a href={base} className="flex w-full items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent">
                     <Home className="size-4 text-muted-foreground" />
-                    Home
-                  </a>
+                    {translateInterface("m3a78695388b3")}</a>
                   <div className="border-t" />
                 </>
               )}
@@ -307,8 +310,7 @@ export function MobileAccountSheet({
               <div className="flex items-center justify-between gap-3 px-4 py-2.5">
                 <span className="flex items-center gap-3 text-sm">
                   <Sun className="size-4 text-muted-foreground" />
-                  Theme
-                </span>
+                  {translateInterface("mefb52e7172b7")}</span>
                 <div className="inline-flex rounded-lg border bg-background p-0.5">
                   {themes.map(({ m, Icon, label }) => (
                     <button
@@ -332,8 +334,7 @@ export function MobileAccountSheet({
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <LogOut className="size-4" />
-              Sign out
-            </button>
+              {translateInterface("m48f0d3d397d4")}</button>
           </div>
         </div>
       )}

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 /**
  * Notification Bell — native host shell.
  *
@@ -6,7 +9,7 @@
  * notification contents, actions, scroll, transparency, and close behavior.
  */
 
-"use client";
+
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -38,6 +41,8 @@ function NotificationFrame({
   origin: string;
   mode: "light" | "dark";
 }) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [mounted, setMounted] = useState(active || preload);
   const [loaded, setLoaded] = useState(false);
@@ -75,7 +80,7 @@ function NotificationFrame({
         active && loaded ? "pointer-events-auto" : "pointer-events-none"
       }`}
       style={{ colorScheme: mode, opacity: active && loaded ? 1 : 0 }}
-      title="YouEye notifications"
+      title={translateInterface("m75dfa5195a9a")}
       sandbox={SANDBOX}
       allow="clipboard-read; clipboard-write"
       onLoad={() => {
@@ -88,6 +93,8 @@ function NotificationFrame({
 }
 
 export function NotificationBell({ initialCount, uiBaseUrl }: NotificationBellProps) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const [open, setOpen] = useState(false);
   const [prewarm, setPrewarm] = useState(false);
   const [mode, setMode] = useState<"light" | "dark">("light");
@@ -161,7 +168,7 @@ export function NotificationBell({ initialCount, uiBaseUrl }: NotificationBellPr
       <button
         onClick={openPanel}
         className="relative inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-accent disabled:opacity-50"
-        aria-label="Notifications"
+        aria-label={translateInterface("m788011833a5a")}
         disabled={!base}
         onFocus={warmPanel}
         onPointerEnter={warmPanel}

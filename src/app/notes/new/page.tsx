@@ -1,10 +1,13 @@
 "use client";
 
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 export default function NewNotePage() {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const router = useRouter();
 
   useEffect(() => {
@@ -48,7 +51,7 @@ export default function NewNotePage() {
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="flex flex-col items-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Creating note...</p>
+        <p className="text-sm text-muted-foreground">{translateInterface("m786a415d27e5")}</p>
       </div>
     </div>
   );

@@ -1,3 +1,6 @@
+import { getLocale } from "next-intl/server";
+import { useTranslations as useInterfaceTranslations } from "next-intl";
+import { getTranslations as getInterfaceTranslations } from "next-intl/server";
 import { getSession } from "@/lib/auth";
 import { getMany, getOne } from "@/lib/db/client";
 import { runMigrations } from "@/lib/db/migrate";
@@ -9,15 +12,19 @@ interface WidgetPageProps {
 }
 
 function SignInPrompt() {
+  const translateInterface = useInterfaceTranslations("interface");
+
   return (
     <div className="p-3 text-sm text-muted-foreground">
-      Sign in to see your notes.
-    </div>
+      {translateInterface("m557f00214077")}</div>
   );
 }
 
 /* ─── Recent Notes Widget (redesigned) ─── */
 async function RecentNotesWidget() {
+  const locale = await getLocale();
+  const translateInterface = await getInterfaceTranslations("interface");
+
   const session = await getSession().catch(() => null);
   if (!session) return <SignInPrompt />;
 
@@ -37,7 +44,7 @@ async function RecentNotesWidget() {
         <div className="h-full p-2">
           <div className="h-full rounded-xl bg-card/50 backdrop-blur-md border border-border/20 p-3 flex flex-col items-center justify-center text-center">
             <StickyNote className="h-8 w-8 text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">No notes yet</p>
+            <p className="text-sm text-muted-foreground">{translateInterface("ma092ad6b8be0")}</p>
           </div>
         </div>
       );
@@ -46,12 +53,12 @@ async function RecentNotesWidget() {
     return (
       <div className="h-full p-2">
         <div className="h-full rounded-xl bg-card/50 backdrop-blur-md border border-border/20 p-3 space-y-1">
-          <h3 className="text-sm font-semibold mb-1">Recent Notes</h3>
+          <h3 className="text-sm font-semibold mb-1">{translateInterface("m632c3623694b")}</h3>
           <ul className="space-y-0.5">
             {notes.map((note: Record<string, unknown>) => {
-              const title = (note.title as string) || "Untitled";
+              const title = (note.title as string) || translateInterface("mf59ab8d1331b");
               const updatedAt = note.updated_at
-                ? formatRelativeTime(note.updated_at as string)
+                ? formatRelativeTime(note.updated_at as string, locale)
                 : "";
               const noteUrl = `${externalUrl}/notes/${note.id}`;
               const isPinned = note.is_pinned as boolean;
@@ -87,12 +94,14 @@ async function RecentNotesWidget() {
       </div>
     );
   } catch {
-    return <div className="p-3 text-sm text-muted-foreground">Unable to load recent notes.</div>;
+    return <div className="p-3 text-sm text-muted-foreground">{translateInterface("m96114cc803b5")}</div>;
   }
 }
 
 /* ─── Pinned Notes Widget ─── */
 async function PinnedNotesWidget() {
+  const translateInterface = await getInterfaceTranslations("interface");
+
   const session = await getSession().catch(() => null);
   if (!session) return <SignInPrompt />;
 
@@ -112,7 +121,7 @@ async function PinnedNotesWidget() {
         <div className="h-full p-2">
           <div className="h-full rounded-xl bg-card/50 backdrop-blur-md border border-border/20 p-3 flex flex-col items-center justify-center text-center">
             <Pin className="h-8 w-8 text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">No pinned notes</p>
+            <p className="text-sm text-muted-foreground">{translateInterface("m1d9e1c0da4b4")}</p>
           </div>
         </div>
       );
@@ -121,10 +130,10 @@ async function PinnedNotesWidget() {
     return (
       <div className="h-full p-2">
         <div className="h-full rounded-xl bg-card/50 backdrop-blur-md border border-border/20 p-3 space-y-2">
-          <h3 className="text-sm font-semibold">Pinned Notes</h3>
+          <h3 className="text-sm font-semibold">{translateInterface("m34bc0f5cfa7a")}</h3>
           <div className="space-y-1.5">
             {notes.map((note: Record<string, unknown>) => {
-              const title = (note.title as string) || "Untitled";
+              const title = (note.title as string) || translateInterface("mf59ab8d1331b");
               const preview = (note.preview as string) || "";
               const cleanPreview = preview.replace(/^- \[[ x]\] /gm, "").slice(0, 50);
               const noteUrl = `${externalUrl}/notes/${note.id}`;
@@ -148,12 +157,14 @@ async function PinnedNotesWidget() {
       </div>
     );
   } catch {
-    return <div className="p-3 text-sm text-muted-foreground">Unable to load pinned notes.</div>;
+    return <div className="p-3 text-sm text-muted-foreground">{translateInterface("md387c1b63028")}</div>;
   }
 }
 
 /* ─── Note Stats Widget ─── */
 async function NoteStatsWidget() {
+  const translateInterface = await getInterfaceTranslations("interface");
+
   const session = await getSession().catch(() => null);
   if (!session) return <SignInPrompt />;
 
@@ -167,16 +178,16 @@ async function NoteStatsWidget() {
     ]);
 
     const stats = [
-      { label: "Notes", value: (totalRes as { count: number })?.count ?? 0, color: "text-foreground" },
-      { label: "Folders", value: (foldersRes as { count: number })?.count ?? 0, color: "text-blue-500" },
-      { label: "Pinned", value: (pinnedRes as { count: number })?.count ?? 0, color: "text-amber-500" },
-      { label: "Reminders", value: (remindersRes as { count: number })?.count ?? 0, color: "text-green-500" },
+      { label: translateInterface("m8a7525b1492f"), value: (totalRes as { count: number })?.count ?? 0, color: "text-foreground" },
+      { label: translateInterface("mc4d6bb200f4c"), value: (foldersRes as { count: number })?.count ?? 0, color: "text-blue-500" },
+      { label: translateInterface("mf20c87946555"), value: (pinnedRes as { count: number })?.count ?? 0, color: "text-amber-500" },
+      { label: translateInterface("m7971dd752669"), value: (remindersRes as { count: number })?.count ?? 0, color: "text-green-500" },
     ];
 
     return (
       <div className="h-full p-2">
         <div className="h-full rounded-xl bg-card/50 backdrop-blur-md border border-border/20 p-3">
-          <h3 className="text-sm font-semibold mb-2">Note Stats</h3>
+          <h3 className="text-sm font-semibold mb-2">{translateInterface("m04f9ba914429")}</h3>
           <div className="grid grid-cols-2 gap-2">
             {stats.map((stat) => (
               <div key={stat.label} className="rounded-lg bg-muted/30 p-2 text-center">
@@ -189,30 +200,33 @@ async function NoteStatsWidget() {
       </div>
     );
   } catch {
-    return <div className="p-3 text-sm text-muted-foreground">Unable to load stats.</div>;
+    return <div className="p-3 text-sm text-muted-foreground">{translateInterface("ma6e46f04c9bc")}</div>;
   }
 }
 
 /* ─── Helper ─── */
-function formatRelativeTime(dateStr: string): string {
+function formatRelativeTime(dateStr: string, locale: string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return "now";
-  if (diffMins < 60) return `${diffMins}m`;
+  const relative = new Intl.RelativeTimeFormat(locale, { numeric: "auto", style: "short" });
+  if (diffMins < 1) return relative.format(0, "second");
+  if (diffMins < 60) return relative.format(-diffMins, "minute");
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h`;
+  if (diffHours < 24) return relative.format(-diffHours, "hour");
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (diffDays < 7) return relative.format(-diffDays, "day");
+  return date.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
 /* ─── Unknown widget fallback ─── */
 function UnknownWidget({ widgetId }: { widgetId: string }) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   return (
     <div className="p-3 text-sm text-muted-foreground">
-      Unknown widget: {widgetId}
+      {translateInterface("m05ac5fdd1798")}{" "}{widgetId}
     </div>
   );
 }

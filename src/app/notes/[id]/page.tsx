@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations as useInterfaceTranslations } from "next-intl";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -53,7 +54,7 @@ interface ChecklistItem {
   checked: boolean;
 }
 
-type SaveStatus = "saved" | "saving" | "idle";
+type SaveStatus = "saved" | "saving" | "idle" | "error";
 
 const TAG_COLORS = [
   "#ef4444", "#f97316", "#f59e0b", "#22c55e", "#14b8a6",
@@ -73,6 +74,9 @@ function serializeChecklist(items: ChecklistItem[]): string {
 }
 
 export default function NoteEditorPage() {
+  const locale = useLocale();
+  const translateInterface = useInterfaceTranslations("interface");
+
   const params = useParams();
   const router = useRouter();
   const noteId = params.id as string;
@@ -99,6 +103,7 @@ export default function NoteEditorPage() {
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const newItemRef = useRef<HTMLInputElement | null>(null);
+  const lastSaveRef = useRef<{ title: string; content: string; extra?: Record<string, unknown> } | null>(null);
 
   const fetchNote = useCallback(async () => {
     try {
@@ -111,6 +116,7 @@ export default function NoteEditorPage() {
         const noteData = await noteRes.json();
         const fetched = noteData.data as Note;
         setNote(fetched);
+        setSaveStatus("saved");
         setTitle(fetched.title);
         setContent(fetched.content);
         setNoteType(fetched.note_type || "text");
@@ -141,6 +147,7 @@ export default function NoteEditorPage() {
 
   const saveNote = useCallback(
     async (newTitle: string, newContent: string, extraFields?: Record<string, unknown>) => {
+      lastSaveRef.current = { title: newTitle, content: newContent, extra: extraFields };
       setSaveStatus("saving");
       try {
         const res = await fetch(`/api/notes/${noteId}`, {
@@ -148,13 +155,12 @@ export default function NoteEditorPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title: newTitle, content: newContent, ...extraFields }),
         });
-        if (res.ok) {
-          const data = await res.json();
-          setNote(data.data);
-          setSaveStatus("saved");
-        }
+        if (!res.ok) throw new Error("Save failed");
+        const data = await res.json();
+        setNote(data.data);
+        setSaveStatus("saved");
       } catch {
-        setSaveStatus("idle");
+        setSaveStatus("error");
       }
     },
     [noteId]
@@ -406,10 +412,9 @@ export default function NoteEditorPage() {
   const isOverdue = reminderAt && new Date(reminderAt) < new Date();
 
   const formatReminderDate = (dateStr: string): string => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
-      " at " +
-      d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    return new Intl.DateTimeFormat(locale, {
+      month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+    }).format(new Date(dateStr));
   };
 
   if (loading) {
@@ -423,22 +428,20 @@ export default function NoteEditorPage() {
   if (!note) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <h2 className="text-xl font-semibold text-foreground mb-2">Note not found</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{translateInterface("m233e5d18a508")}</h2>
         <Button variant="outline" onClick={() => router.push("/")}>
-          Back to notes
-        </Button>
+          {translateInterface("m2687ec1d6b28")}</Button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-4">
+    <div className="notes-editor max-w-4xl mx-auto px-4 py-6 sm:px-8 sm:py-8">
       {/* Header Bar */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <Button variant="ghost" size="sm" onClick={() => router.push("/")} className="gap-1">
           <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
+          {translateInterface("m76900f1bfd16")}</Button>
 
         {/* Folder Picker */}
         <div className="relative">
@@ -454,8 +457,7 @@ export default function NoteEditorPage() {
             ) : (
               <>
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                No folder
-              </>
+                {translateInterface("mca98f4c7bf9d")}</>
             )}
           </button>
           {showFolderPicker && (
@@ -463,8 +465,7 @@ export default function NoteEditorPage() {
               <div className="fixed inset-0 z-10" onClick={() => setShowFolderPicker(false)} />
               <div className="absolute top-full left-0 mt-1 w-48 border border-border/60 bg-card rounded-xl shadow-lg z-20 py-1">
                 <button onClick={() => handleFolderChange(null)} className="w-full text-left px-3 py-2 text-sm hover:bg-accent/50 transition-colors">
-                  No folder
-                </button>
+                  {translateInterface("mca98f4c7bf9d")}</button>
                 {folders.map((folder) => (
                   <button
                     key={folder.id}
@@ -481,46 +482,56 @@ export default function NoteEditorPage() {
         </div>
 
         <div className="flex items-center gap-1 ml-auto">
-          <span className="text-xs text-muted-foreground mr-2">
-            {saveStatus === "saving" && "Saving..."}
+          <span role="status" aria-live="polite" className="text-sm text-muted-foreground mr-2">
+            {saveStatus === "saving" && translateInterface("uxSaving")}
+            {saveStatus === "idle" && translateInterface("uxUnsavedChanges")}
+            {saveStatus === "error" && translateInterface("uxNotSaved")}
             {saveStatus === "saved" && (
               <span className="inline-flex items-center gap-1 text-green-500">
                 <Check className="h-3 w-3" />
-                Saved
-              </span>
+                {translateInterface("mb5c120b316c2")}</span>
             )}
           </span>
 
-          <Button variant="ghost" size="sm" onClick={handleTogglePin}
+          <Button variant="ghost" size="sm" aria-label={note.is_pinned ? translateInterface("uxUnpinNote") : translateInterface("uxPinNote")} onClick={handleTogglePin}
             className={note.is_pinned ? "text-amber-500" : "text-muted-foreground"}>
             <Pin className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleToggleShare}
+          <Button variant="ghost" size="sm" aria-label={note.share_token ? translateInterface("uxManageSharing") : translateInterface("uxShareNote")} onClick={handleToggleShare}
             className={note.share_token ? "text-blue-500" : "text-muted-foreground"}>
             <Share2 className="h-4 w-4" />
           </Button>
 
           {showDeleteConfirm ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-destructive">Delete?</span>
-              <Button variant="ghost" size="sm" onClick={handleDelete} className="text-destructive hover:text-destructive">Yes</Button>
-              <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>No</Button>
+              <span className="text-xs text-destructive">{translateInterface("m18b77e44e689")}</span>
+              <Button variant="ghost" size="sm" onClick={handleDelete} className="text-destructive hover:text-destructive">{translateInterface("m85a39ab345d6")}</Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>{translateInterface("m1ea442a134b2")}</Button>
             </div>
           ) : (
-            <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)} className="text-destructive hover:text-destructive">
+            <Button variant="ghost" size="sm" aria-label={translateInterface("uxDeleteNote")} onClick={() => setShowDeleteConfirm(true)} className="text-destructive hover:text-destructive">
               <Trash2 className="h-4 w-4" />
             </Button>
           )}
         </div>
       </div>
 
+      {saveStatus === "error" && <div role="alert" className="mb-5 rounded-xl border border-destructive/40 bg-card p-4 text-sm">
+        <p className="font-medium">{translateInterface("uxSaveFailed")}</p>
+        <p className="mt-1 text-muted-foreground">{translateInterface("uxEditsRetained")}</p>
+        <button className="mt-2 min-h-11 font-medium underline underline-offset-4" onClick={() => {
+          const attempt = lastSaveRef.current;
+          if (attempt) saveNote(attempt.title, attempt.content, attempt.extra);
+        }}>{translateInterface("uxRetrySaving")}</button>
+      </div>}
       {/* Title Input */}
       <input
         type="text"
         value={title}
         onChange={(e) => handleTitleChange(e.target.value)}
-        placeholder="Untitled"
-        className="w-full text-3xl font-bold border-none bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none mb-2"
+        aria-label={translateInterface("uxNoteTitle")}
+        placeholder={translateInterface("mf59ab8d1331b")}
+        className="w-full text-3xl font-semibold border-none bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none mb-2"
       />
 
       {/* Tags Row */}
@@ -533,7 +544,7 @@ export default function NoteEditorPage() {
               style={{ backgroundColor: `${tag.color}18`, color: tag.color }}
             >
               {tag.name}
-              <button onClick={() => handleToggleTag(tag)} className="hover:opacity-70">
+              <button aria-label={translateInterface("uxRemoveTag", { name: tag.name })} onClick={() => handleToggleTag(tag)} className="hover:opacity-70">
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -548,7 +559,7 @@ export default function NoteEditorPage() {
         }`}>
           <Bell className="h-3 w-3" />
           {formatReminderDate(reminderAt)}
-          <button onClick={handleClearReminder} className="hover:opacity-70 ml-1">
+          <button aria-label={translateInterface("maab6824ce696")} onClick={handleClearReminder} className="hover:opacity-70 ml-1">
             <X className="h-3 w-3" />
           </button>
         </div>
@@ -562,10 +573,10 @@ export default function NoteEditorPage() {
           size="sm"
           onClick={handleToggleNoteType}
           className={`gap-1.5 text-xs ${noteType === "checklist" ? "text-blue-500" : "text-muted-foreground"}`}
-          title={noteType === "checklist" ? "Switch to text" : "Switch to checklist"}
+          title={noteType === "checklist" ? translateInterface("m8c49d8c2b8f8") : translateInterface("m675e215ba1f1")}
         >
           {noteType === "checklist" ? <Type className="h-4 w-4" /> : <CheckSquare className="h-4 w-4" />}
-          {noteType === "checklist" ? "Text mode" : "Checklist"}
+          {noteType === "checklist" ? translateInterface("ma6a3bf441794") : translateInterface("m7346030400bf")}
         </Button>
 
         {/* Tag picker */}
@@ -577,8 +588,7 @@ export default function NoteEditorPage() {
             className="gap-1.5 text-xs text-muted-foreground"
           >
             <Tag className="h-4 w-4" />
-            Tags
-          </Button>
+            {translateInterface("m1331275bc537")}</Button>
           {showTagPicker && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowTagPicker(false)} />
@@ -605,7 +615,8 @@ export default function NoteEditorPage() {
                       type="text"
                       value={newTagName}
                       onChange={(e) => setNewTagName(e.target.value)}
-                      placeholder="New tag..."
+                      aria-label={translateInterface("me74cb3b56852")}
+                      placeholder={translateInterface("me74cb3b56852")}
                       className="flex-1 text-sm bg-transparent border-none focus:outline-none text-foreground placeholder:text-muted-foreground"
                       onKeyDown={(e) => { if (e.key === "Enter") handleCreateTag(); }}
                     />
@@ -613,13 +624,15 @@ export default function NoteEditorPage() {
                       {TAG_COLORS.slice(0, 5).map((c) => (
                         <button
                           key={c}
+                          aria-label={translateInterface("uxTagColor", { color: c })}
+                          aria-pressed={newTagColor === c}
                           onClick={() => setNewTagColor(c)}
                           className="h-4 w-4 rounded-full border border-border/60"
                           style={{ backgroundColor: c, outline: newTagColor === c ? "2px solid var(--ring)" : "none", outlineOffset: "1px" }}
                         />
                       ))}
                     </div>
-                    <button onClick={handleCreateTag} className="text-muted-foreground hover:text-foreground">
+                    <button aria-label={translateInterface("uxCreateTag")} onClick={handleCreateTag} className="text-muted-foreground hover:text-foreground">
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
@@ -638,15 +651,16 @@ export default function NoteEditorPage() {
             className={`gap-1.5 text-xs ${reminderAt ? "text-blue-500" : "text-muted-foreground"}`}
           >
             {reminderAt ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-            {reminderAt ? "Edit reminder" : "Reminder"}
+            {reminderAt ? translateInterface("m1f1353b055df") : translateInterface("m31757bbfa17e")}
           </Button>
           {showReminderPicker && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowReminderPicker(false)} />
               <div className="absolute top-full left-0 mt-1 border border-border/60 bg-card rounded-xl shadow-lg z-20 p-3">
-                <label className="text-xs text-muted-foreground block mb-1.5">Set reminder</label>
+                <label className="text-xs text-muted-foreground block mb-1.5">{translateInterface("m3814a74da025")}</label>
                 <input
                   type="datetime-local"
+                  aria-label={translateInterface("m3814a74da025")}
                   defaultValue={reminderAt ? new Date(new Date(reminderAt).getTime() - new Date(reminderAt).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ""}
                   onChange={(e) => {
                     if (e.target.value) handleSetReminder(new Date(e.target.value).toISOString());
@@ -658,8 +672,7 @@ export default function NoteEditorPage() {
                     onClick={handleClearReminder}
                     className="block mt-2 text-xs text-destructive hover:underline"
                   >
-                    Remove reminder
-                  </button>
+                    {translateInterface("maab6824ce696")}</button>
                 )}
               </div>
             </>
@@ -667,8 +680,8 @@ export default function NoteEditorPage() {
         </div>
 
         <div className="flex shrink-0 items-center gap-3 ml-auto whitespace-nowrap text-xs text-muted-foreground">
-          <span>{wordCount} {wordCount === 1 ? "word" : "words"}</span>
-          <span>{charCount} {charCount === 1 ? "char" : "chars"}</span>
+          <span>{translateInterface("m23d0bb29fca0", { count: wordCount })}</span>
+          <span>{translateInterface("m426699d5a8c0", { count: charCount })}</span>
         </div>
       </div>
 
@@ -679,20 +692,23 @@ export default function NoteEditorPage() {
             <div key={index} className={`checklist-item ${item.checked ? "completed" : ""}`}>
               <input
                 type="checkbox"
+                aria-label={translateInterface("uxChecklistCompleted", { number: index + 1 })}
                 checked={item.checked}
                 onChange={(e) => updateChecklistItem(index, { checked: e.target.checked })}
               />
               <input
                 type="text"
+                aria-label={translateInterface("uxChecklistItem", { number: index + 1 })}
                 value={item.text}
                 onChange={(e) => updateChecklistItem(index, { text: e.target.value })}
                 onKeyDown={(e) => handleChecklistKeyDown(e, index)}
-                placeholder={index === 0 ? "List item" : ""}
+                placeholder={index === 0 ? translateInterface("m201333ac71bc") : ""}
                 className="checklist-text"
                 ref={index === checklistItems.length - 1 ? newItemRef : undefined}
               />
               {checklistItems.length > 1 && (
                 <button
+                  aria-label={translateInterface("uxRemoveChecklistItem", { number: index + 1 })}
                   onClick={() => removeChecklistItem(index)}
                   className="text-muted-foreground/50 hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
                   style={{ opacity: undefined }}
@@ -709,15 +725,14 @@ export default function NoteEditorPage() {
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2 px-1"
           >
             <Plus className="h-4 w-4" />
-            Add item
-          </button>
+            {translateInterface("md1a0b329a72b")}</button>
         </div>
       ) : (
-        <textarea
+        <textarea aria-label={translateInterface("uxNoteContent")}
           value={content}
           onChange={(e) => handleContentChange(e.target.value)}
           onKeyDown={handleContentKeyDown}
-          placeholder="Start writing..."
+          placeholder={translateInterface("m6bb4d95c616d")}
           className="w-full min-h-[50vh] text-sm bg-transparent text-foreground placeholder:text-muted-foreground/50 border-none focus:outline-none resize-none leading-relaxed"
         />
       )}

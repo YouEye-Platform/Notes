@@ -1,3 +1,5 @@
+import { getLocale } from "next-intl/server";
+import { getTranslations as getInterfaceTranslations } from "next-intl/server";
 import { StickyNote } from "lucide-react";
 import { headers } from "next/headers";
 
@@ -26,8 +28,8 @@ async function fetchSharedNote(token: string): Promise<SharedNote | null> {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+function formatDate(dateStr: string, locale: string): string {
+  return new Date(dateStr).toLocaleDateString(locale, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -39,6 +41,9 @@ export default async function SharedNotePage({
 }: {
   params: Promise<{ token: string }>;
 }) {
+  const translateInterface = await getInterfaceTranslations("interface");
+
+  const locale = await getLocale();
   const { token } = await params;
   const note = await fetchSharedNote(token);
 
@@ -47,10 +52,9 @@ export default async function SharedNotePage({
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <StickyNote className="h-16 w-16 text-muted-foreground/40 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold mb-2">Not Found</h1>
+          <h1 className="text-xl font-semibold mb-2">{translateInterface("m0019dfc4b32d")}</h1>
           <p className="text-muted-foreground">
-            This note doesn&apos;t exist or is no longer shared.
-          </p>
+            {translateInterface("m5d7045f7759a")}</p>
         </div>
       </div>
     );
@@ -63,18 +67,17 @@ export default async function SharedNotePage({
         <div className="max-w-3xl mx-auto flex items-center gap-2">
           <StickyNote className="h-5 w-5 text-muted-foreground" />
           <span className="text-sm font-medium text-muted-foreground">
-            Shared Note
-          </span>
+            {translateInterface("m2a9f7766212c")}</span>
         </div>
       </header>
 
       {/* Content */}
       <article className="max-w-3xl mx-auto px-6 py-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          {note.title || "Untitled"}
+          {note.title || translateInterface("mf59ab8d1331b")}
         </h1>
         <p className="text-sm text-muted-foreground mb-8">
-          {formatDate(note.created_at)}
+          {formatDate(note.created_at, locale)}
         </p>
         <div className="text-foreground whitespace-pre-wrap leading-relaxed">
           {note.content}
@@ -84,8 +87,7 @@ export default async function SharedNotePage({
       {/* Footer */}
       <footer className="border-t border-border/40 px-6 py-6 mt-12">
         <p className="text-center text-xs text-muted-foreground">
-          Powered by YouEye Notes
-        </p>
+          {translateInterface("m5b37c6d5e72a")}</p>
       </footer>
     </div>
   );

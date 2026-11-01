@@ -1,3 +1,4 @@
+import { getTranslations as getInterfaceTranslations } from "next-intl/server";
 
 import Link from "next/link";
 /**
@@ -72,6 +73,8 @@ export async function AppHeader({
   appMenuItems,
   children,
 }: AppHeaderProps) {
+  const translateInterface = await getInterfaceTranslations("interface");
+
   const session = await getSession();
   if (!session) return null;
 
@@ -94,7 +97,7 @@ export async function AppHeader({
   // Merge caller-supplied app menu items with the platform-provided "App Settings" link
   const mergedAppItems = [
     ...(appMenuItems ?? []),
-    ...(appSettingsUrl ? [{ label: "App Settings", icon: "Sliders", href: appSettingsUrl }] : []),
+    ...(appSettingsUrl ? [{ label: translateInterface("mda645334193e"), icon: "Sliders", href: appSettingsUrl }] : []),
   ];
 
   // Per-app branding (Plan 4 Phase 0). The full app list is stripped from

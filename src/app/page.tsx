@@ -1,5 +1,7 @@
 "use client";
+import { useLocale } from "next-intl";
 
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -13,7 +15,9 @@ import {
   Tag,
   FolderOpen,
   Loader2,
-  ChevronDown,
+  PanelLeft,
+  AlertCircle,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,18 +55,23 @@ type NoteTypeFilter = "all" | "checklist";
 type SortMode = "updated_desc" | "updated_asc" | "alpha" | "created_desc";
 
 const SORT_LABELS: Record<SortMode, string> = {
-  updated_desc: "Most Recent",
-  updated_asc: "Oldest",
-  alpha: "Alphabetical",
-  created_desc: "Recently Created",
+  updated_desc: "m7ffd1b8aed40",
+  updated_asc: "m505dc450753e",
+  alpha: "ma49d631f8c6c",
+  created_desc: "m97833a0e37e9",
 };
 
 export default function HomePage() {
+  const locale = useLocale();
+  const translateInterface = useInterfaceTranslations("interface");
+
   const router = useRouter();
   const [notes, setNotes] = useState<readonly Note[]>([]);
   const [folders, setFolders] = useState<readonly Folder[]>([]);
   const [tags, setTags] = useState<readonly TagData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showCollections, setShowCollections] = useState(false);
 
   // Filters
   const [sidebarFilter, setSidebarFilter] = useState<SidebarFilter>("all");
@@ -71,7 +80,6 @@ export default function HomePage() {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   // Folder creation
   const [creatingFolder, setCreatingFolder] = useState(false);
@@ -79,12 +87,14 @@ export default function HomePage() {
   const [newFolderColor, setNewFolderColor] = useState("#3b82f6");
 
   const fetchData = useCallback(async () => {
+    setError(null);
     try {
       const [notesRes, foldersRes, tagsRes] = await Promise.all([
         fetch("/api/notes?limit=200"),
         fetch("/api/folders"),
         fetch("/api/tags"),
       ]);
+      if (!notesRes.ok || !foldersRes.ok || !tagsRes.ok) throw new Error(translateInterface("uxNotesLoadFailed"));
       if (notesRes.ok) {
         const d = await notesRes.json();
         setNotes(d.data ?? []);
@@ -98,11 +108,11 @@ export default function HomePage() {
         setTags(d.data ?? []);
       }
     } catch {
-      // Errors handled — empty state shown
+      setError(translateInterface("uxNotesLoadFailed"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [translateInterface]);
 
   useEffect(() => {
     fetchData();
@@ -178,13 +188,14 @@ export default function HomePage() {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
+    const relative = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+    if (diffMins < 1) return relative.format(0, "second");
+    if (diffMins < 60) return relative.format(-diffMins, "minute");
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 24) return relative.format(-diffHours, "hour");
     const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+    if (diffDays < 7) return relative.format(-diffDays, "day");
+    return date.toLocaleDateString(locale);
   };
 
   const parseChecklistProgress = (content: string): { done: number; total: number } | null => {
@@ -213,16 +224,21 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[60vh]" role="status" aria-label={translateInterface("uxLoadingNotes")}>
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)]">
+    <div className="notes-workspace">
+      <button className="notes-collections-toggle" aria-controls="notes-collections" aria-expanded={showCollections}
+        onClick={() => setShowCollections((open) => !open)}>
+        <PanelLeft className="h-4 w-4" /> {translateInterface("uxCollections")}
+      </button>
       {/* Sidebar */}
-      <aside className="w-64 shrink-0 border-r border-border/40 bg-card/30 p-3 flex flex-col gap-0.5 overflow-y-auto">
+      <aside id="notes-collections" aria-label={translateInterface("uxNoteCollections")} className={`notes-sidebar ${showCollections ? "is-open" : ""}`}>
+        <div className="px-3 pb-4 pt-2 text-sm font-semibold">{translateInterface("uxYourCollection")}</div>
         {/* Main filters */}
         <button
           onClick={() => { setSidebarFilter("all"); setSelectedFolder(null); setSelectedTag(null); }}
@@ -231,7 +247,7 @@ export default function HomePage() {
           }`}
         >
           <StickyNote className="h-4 w-4 text-muted-foreground" />
-          <span className="flex-1">All Notes</span>
+          <span className="flex-1">{translateInterface("m00a187caec84")}</span>
           <span className="text-xs text-muted-foreground tabular-nums">{totalCount}</span>
         </button>
         <button
@@ -241,7 +257,7 @@ export default function HomePage() {
           }`}
         >
           <Pin className="h-4 w-4 text-muted-foreground" />
-          <span className="flex-1">Pinned</span>
+          <span className="flex-1">{translateInterface("mf20c87946555")}</span>
           <span className="text-xs text-muted-foreground tabular-nums">{pinnedCount}</span>
         </button>
         <button
@@ -251,7 +267,7 @@ export default function HomePage() {
           }`}
         >
           <Bell className="h-4 w-4 text-muted-foreground" />
-          <span className="flex-1">Reminders</span>
+          <span className="flex-1">{translateInterface("m7971dd752669")}</span>
           <span className="text-xs text-muted-foreground tabular-nums">{reminderCount}</span>
         </button>
 
@@ -260,10 +276,9 @@ export default function HomePage() {
         {/* Folders */}
         <div className="flex items-center justify-between px-3 mb-0.5">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Folders
-          </span>
+            {translateInterface("mc4d6bb200f4c")}</span>
           <button
-            onClick={() => setCreatingFolder(true)}
+            aria-label={translateInterface("uxNewFolder")} onClick={() => setCreatingFolder(true)}
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -276,7 +291,8 @@ export default function HomePage() {
               type="text"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="Folder name"
+              aria-label={translateInterface("m14d34edf50ef")}
+              placeholder={translateInterface("m14d34edf50ef")}
               className="w-full px-2 py-1.5 text-sm border border-border/60 rounded-lg bg-card/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleCreateFolder();
@@ -286,15 +302,14 @@ export default function HomePage() {
             />
             <div className="flex items-center gap-2">
               <input
-                type="color"
+                aria-label={translateInterface("uxFolderColor")} type="color"
                 value={newFolderColor}
                 onChange={(e) => setNewFolderColor(e.target.value)}
                 className="h-6 w-6 rounded cursor-pointer border-0"
               />
               <Button size="sm" onClick={handleCreateFolder} className="flex-1 h-7 text-xs">
-                Create
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setCreatingFolder(false)} className="h-7 text-xs px-2">
+                {translateInterface("m4759498ac2a7")}</Button>
+              <Button size="sm" variant="ghost" aria-label={translateInterface("uxCancelFolderCreation")} onClick={() => setCreatingFolder(false)} className="h-7 text-xs px-2">
                 <X className="h-3 w-3" />
               </Button>
             </div>
@@ -327,8 +342,7 @@ export default function HomePage() {
             <div className="my-2 border-t border-border/40" />
             <div className="px-3 mb-0.5">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Tags
-              </span>
+                {translateInterface("m1331275bc537")}</span>
             </div>
             {tags.map((tag) => (
               <button
@@ -351,17 +365,27 @@ export default function HomePage() {
       </aside>
 
       {/* Main Area */}
-      <div className="flex-1 p-6 overflow-y-auto">
+      <section className="notes-main">
         <div className="max-w-6xl mx-auto">
-          {/* Top Bar */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="relative flex-1 max-w-md">
+          <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="mb-1 text-sm text-muted-foreground">{translateInterface("uxThoughtsIntroduction")}</p>
+              <h1 className="text-3xl font-semibold tracking-tight">{selectedFolder ? folders.find((folder) => folder.id === selectedFolder)?.name : selectedTag ? tags.find((tag) => tag.id === selectedTag)?.name : sidebarFilter === "pinned" ? translateInterface("uxPinnedNotes") : sidebarFilter === "reminders" ? translateInterface("m7971dd752669") : translateInterface("m00a187caec84")}</h1>
+            </div>
+            <Button onClick={() => router.push("/notes/new")} className="notes-create min-h-11 gap-2 rounded-xl">
+              <Plus className="h-4 w-4" /> {translateInterface("mb763c5ea3c57")}
+            </Button>
+          </div>
+          {/* Search and filtering stay together as the collection changes. */}
+          <div className="notes-toolbar">
+            <div className="relative min-w-0 flex-1 basis-56">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search notes..."
+                aria-label={translateInterface("uxSearchNotes")}
+                placeholder={translateInterface("m68e23f8d5d50")}
                 className="w-full pl-10 pr-4 py-2 border border-border/60 rounded-xl bg-card/50 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
               />
             </div>
@@ -369,69 +393,38 @@ export default function HomePage() {
             {/* Filter tabs */}
             <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
               <button
-                onClick={() => setNoteTypeFilter("all")}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                aria-pressed={noteTypeFilter === "all"} onClick={() => setNoteTypeFilter("all")}
+                className={`min-h-11 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   noteTypeFilter === "all" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                All
-              </button>
+                {translateInterface("ma52ace420f21")}</button>
               <button
-                onClick={() => setNoteTypeFilter("checklist")}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                aria-pressed={noteTypeFilter === "checklist"} onClick={() => setNoteTypeFilter("checklist")}
+                className={`min-h-11 px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
                   noteTypeFilter === "checklist" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <CheckSquare className="h-3 w-3" />
-                Checklists
-              </button>
+                {translateInterface("m4d03ed9d62c8")}</button>
             </div>
 
-            {/* Sort dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowSortDropdown((p) => !p)}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground border border-border/60 rounded-lg transition-colors"
-              >
-                {SORT_LABELS[sortMode]}
-                <ChevronDown className="h-3 w-3" />
-              </button>
-              {showSortDropdown && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowSortDropdown(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-44 border border-border/60 bg-card rounded-xl shadow-lg z-20 py-1">
-                    {(Object.entries(SORT_LABELS) as [SortMode, string][]).map(([key, label]) => (
-                      <button
-                        key={key}
-                        onClick={() => { setSortMode(key); setShowSortDropdown(false); }}
-                        className={`w-full text-left px-3 py-2 text-xs transition-colors hover:bg-accent/50 ${
-                          sortMode === key ? "text-foreground font-medium" : "text-muted-foreground"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            <Button
-              onClick={() => router.push("/notes/new")}
-              className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-sm"
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              New Note
-            </Button>
+            <label className="flex min-h-11 items-center gap-2 text-sm text-muted-foreground">
+              <span className="sr-only">{translateInterface("uxSortNotes")}</span>
+              <select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}
+                className="min-h-11 rounded-lg border border-border bg-card px-3 text-sm text-foreground">
+                {Object.entries(SORT_LABELS).map(([value, label]) => <option key={value} value={value}>{translateInterface(label)}</option>)}
+              </select>
+            </label>
           </div>
 
           {/* Active filter indicator */}
           {hasActiveFilter && (
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs text-muted-foreground">Filtered:</span>
+              <span className="text-xs text-muted-foreground">{translateInterface("m1fa89b5003f2")}</span>
               {sidebarFilter !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-accent">
-                  {sidebarFilter === "pinned" ? "Pinned" : "Reminders"}
+                  {sidebarFilter === "pinned" ? translateInterface("mf20c87946555") : translateInterface("m7971dd752669")}
                 </span>
               )}
               {selectedFolder && (
@@ -447,37 +440,41 @@ export default function HomePage() {
               )}
               {noteTypeFilter !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-accent">
-                  Checklists
-                </span>
+                  {translateInterface("m4d03ed9d62c8")}</span>
               )}
               <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                Clear all
-              </button>
+                {translateInterface("uxClearFilters")}</button>
             </div>
           )}
 
           {/* Empty state */}
-          {filteredNotes.length === 0 ? (
+          {error ? (
+            <div role="alert" className="rounded-xl border border-border bg-card p-6">
+              <AlertCircle className="mb-3 h-5 w-5 text-destructive" />
+              <h2 className="mb-2 font-semibold">{translateInterface("uxNotesUnavailable")}</h2>
+              <p className="text-sm text-muted-foreground">{error}</p>
+              <Button variant="outline" className="mt-4 min-h-11 gap-2" onClick={fetchData}><RefreshCw className="h-4 w-4" />{translateInterface("uxTryAgain")}</Button>
+            </div>
+          ) : filteredNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mb-5">
                 <StickyNote className="h-10 w-10 text-muted-foreground/40" />
               </div>
               <h2 className="text-xl font-semibold text-foreground mb-2">
-                {hasActiveFilter ? "No matching notes" : "No notes yet"}
+                {hasActiveFilter ? translateInterface("m5a859d101f66") : translateInterface("ma092ad6b8be0")}
               </h2>
               <p className="text-sm text-muted-foreground mb-6 max-w-sm">
                 {hasActiveFilter
-                  ? "Try adjusting your filters or search query"
-                  : "Create your first note to get started"}
+                  ? translateInterface("m16638be7544f")
+                  : translateInterface("m98685211968d")}
               </p>
               {!hasActiveFilter && (
                 <Button
                   onClick={() => router.push("/notes/new")}
-                  className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl"
+                  className="notes-create rounded-xl"
                 >
                   <Plus className="h-4 w-4 mr-1.5" />
-                  Create your first note
-                </Button>
+                  {translateInterface("m9e27433710c4")}</Button>
               )}
             </div>
           ) : (
@@ -486,9 +483,9 @@ export default function HomePage() {
               {showPinnedSection && (
                 <div className="mb-8">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-                    Pinned
+                    {translateInterface("mf20c87946555")}
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {pinnedNotes.map((note) => (
                       <NoteCard
                         key={note.id}
@@ -508,10 +505,9 @@ export default function HomePage() {
               <div>
                 {showPinnedSection && (
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-                    All Notes
-                  </h3>
+                    {translateInterface("m00a187caec84")}</h3>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {(showPinnedSection ? unpinnedNotes : filteredNotes).map((note) => (
                     <NoteCard
                       key={note.id}
@@ -528,7 +524,7 @@ export default function HomePage() {
             </>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
@@ -545,6 +541,8 @@ interface NoteCardProps {
 }
 
 function NoteCard({ note, folder, formatRelativeTime, parseChecklistProgress, getPreview, onClick }: NoteCardProps) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const progress = note.note_type === "checklist" ? parseChecklistProgress(note.content) : null;
   const isOverdue = note.reminder_at && new Date(note.reminder_at) < new Date() && !note.reminder_sent;
   const hasUpcomingReminder = note.reminder_at && !note.reminder_sent && new Date(note.reminder_at) >= new Date();
@@ -556,8 +554,8 @@ function NoteCard({ note, folder, formatRelativeTime, parseChecklistProgress, ge
       style={{ borderLeftWidth: "3px", borderLeftColor: folder?.color || "transparent" }}
     >
       {/* Title */}
-      <h3 className="font-semibold text-sm text-foreground truncate leading-tight">
-        {note.title || "Untitled"}
+      <h3 className="font-semibold text-base text-foreground line-clamp-2 leading-snug">
+        {note.title || translateInterface("mf59ab8d1331b")}
       </h3>
 
       {/* Smart preview */}
@@ -565,7 +563,7 @@ function NoteCard({ note, folder, formatRelativeTime, parseChecklistProgress, ge
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <CheckSquare className="h-3 w-3" />
-            <span>{progress.done}/{progress.total} completed</span>
+            <span>{translateInterface("mce46c101706e", { done: progress.done, total: progress.total })}</span>
           </div>
           <div className="checklist-preview-bar">
             <div
@@ -575,8 +573,8 @@ function NoteCard({ note, folder, formatRelativeTime, parseChecklistProgress, ge
           </div>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-          {getPreview(note.content) || "Empty note"}
+        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+          {getPreview(note.content) || translateInterface("m9cd41f71ef9b")}
         </p>
       )}
 
@@ -586,7 +584,7 @@ function NoteCard({ note, folder, formatRelativeTime, parseChecklistProgress, ge
           {note.tags.slice(0, 3).map((tag) => (
             <span
               key={tag.id}
-              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium"
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
               style={{
                 backgroundColor: `${tag.color}18`,
                 color: tag.color,
@@ -596,7 +594,7 @@ function NoteCard({ note, folder, formatRelativeTime, parseChecklistProgress, ge
             </span>
           ))}
           {note.tags.length > 3 && (
-            <span className="text-[10px] text-muted-foreground px-1">
+            <span className="text-xs text-muted-foreground px-1">
               +{note.tags.length - 3}
             </span>
           )}
@@ -606,12 +604,12 @@ function NoteCard({ note, folder, formatRelativeTime, parseChecklistProgress, ge
       {/* Footer */}
       <div className="flex items-center gap-2 mt-auto pt-1">
         {folder && (
-          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: folder.color }} />
             {folder.name}
           </span>
         )}
-        <span className="text-[10px] text-muted-foreground ml-auto">
+        <span className="text-xs text-muted-foreground ml-auto">
           {formatRelativeTime(note.updated_at)}
         </span>
         {note.is_pinned && <Pin className="h-3 w-3 text-amber-500" />}

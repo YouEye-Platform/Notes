@@ -1,16 +1,17 @@
 {
   "name": "ye-app-notes",
-  "version": "0.5.12",
+  "version": "0.5.13",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/reproducible-next.cjs && node scripts/postbuild.mjs && node scripts/bundle-node-runtime.mjs",
+    "build": "pnpm run i18n:check && node scripts/reproducible-next.cjs && node scripts/postbuild.mjs && node scripts/bundle-node-runtime.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "node --test tests/*.spec.mjs",
     "release:prepare": "node scripts/prepare-release.mjs",
     "release:check": "node scripts/prepare-release.mjs --check",
-    "typecheck": "tsc --noEmit --pretty false"
+    "typecheck": "tsc --noEmit --pretty false",
+    "i18n:check": "node scripts/check-i18n-source.mjs && node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "1.3.1",

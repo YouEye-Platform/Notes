@@ -1,3 +1,7 @@
+"use client";
+
+
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 /**
  * App Drawer — native host shell.
  *
@@ -6,7 +10,7 @@
  * transparency, animation, and outside-click close behavior.
  */
 
-"use client";
+
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -48,6 +52,8 @@ function OverlayFrame({
   origin: string;
   mode: "light" | "dark";
 }) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [mounted, setMounted] = useState(active || preload);
   const [loaded, setLoaded] = useState(false);
@@ -85,7 +91,7 @@ function OverlayFrame({
         active && loaded ? "pointer-events-auto" : "pointer-events-none"
       }`}
       style={{ colorScheme: mode, opacity: active && loaded ? 1 : 0 }}
-      title={`YouEye ${kind}`}
+      title={translateInterface("m17755da34536", { value0: kind === "drawer" ? translateInterface("m6880ed028305") : kind === "launcher" ? translateInterface("mf290ead4af85") : translateInterface("m788011833a5a") })}
       sandbox={SANDBOX}
       allow="clipboard-read; clipboard-write"
       onLoad={() => {
@@ -98,6 +104,8 @@ function OverlayFrame({
 }
 
 export function AppDrawer({ uiBaseUrl }: AppDrawerProps) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const [overlay, setOverlay] = useState<OverlayKind | null>(null);
   const [prewarm, setPrewarm] = useState(false);
   const [mode, setMode] = useState<"light" | "dark">("light");
@@ -169,7 +177,7 @@ export function AppDrawer({ uiBaseUrl }: AppDrawerProps) {
     <>
       <button
         className="inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-accent disabled:opacity-50"
-        aria-label="Apps"
+        aria-label={translateInterface("m89dd748442c1")}
         disabled={!base}
         onFocus={warmOverlays}
         onClick={() => openOverlay("drawer")}

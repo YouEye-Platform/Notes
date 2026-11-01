@@ -1,4 +1,7 @@
-import { resolveAppLocale } from "@/lib/locale";
+import { getTranslations as getInterfaceTranslations } from "next-intl/server";
+import { localeDirection } from "@/lib/locale";
+import { getAppLocale } from "@/i18n/runtime";
+import { LocaleRefresh } from "@/components/locale-refresh";
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
@@ -17,10 +20,11 @@ import { StickyNote } from "lucide-react";
 import { LaunchRequirementsBanner } from "@/components/launch-requirements-banner";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const translateInterface = await getInterfaceTranslations("interface");
   const appName = process.env.APP_NAME || "Notes";
   return {
     title: appName,
-    description: "Create, organize, and share notes",
+    description: translateInterface("m6b373240d64d"),
     icons: { icon: "/api/pwa/icon?size=32" },
     appleWebApp: {
       capable: true,
@@ -34,7 +38,6 @@ export const viewport: Viewport = {
   themeColor: "#f59e0b",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 const api = createApiClient("ye-notes");
@@ -61,11 +64,11 @@ export default async function RootLayout({
   const isSystemTheme = themeMode === "system";
   const htmlClass = isSystemTheme ? "" : themeMode;
 
-  const locale = resolveAppLocale(headerConfig?.locale);
+  const locale = await getAppLocale();
   const messages = await getMessages({ locale });
 
   return (
-    <html lang={locale} className={htmlClass} suppressHydrationWarning>
+    <html lang={locale} dir={localeDirection(locale)} className={htmlClass} suppressHydrationWarning>
       <head>
         {isSystemTheme && (
           <script dangerouslySetInnerHTML={{ __html: generateSystemThemeScript() }} />
@@ -79,6 +82,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <LocaleRefresh locale={locale} endpoint="/api/locale" />
           {session && (
             <AppHeader
               appId="ye-notes"

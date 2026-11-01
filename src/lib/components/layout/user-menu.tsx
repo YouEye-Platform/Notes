@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations as useInterfaceTranslations } from "next-intl";
 /**
  * User Menu — Plan 5 (toned + translucent, native side; mirrors the UI menu).
  *
@@ -8,7 +11,7 @@
  * drawer. App-specific items still come from `appItems`.
  */
 
-"use client";
+
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -61,6 +64,8 @@ export function UserMenu({
   platformItems,
   appItems,
 }: UserMenuProps) {
+  const translateInterface = useInterfaceTranslations("interface");
+
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<ThemeMode>("system");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -119,7 +124,7 @@ export function UserMenu({
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen(!open)}
-        aria-label="Account menu"
+        aria-label={translateInterface("m7fb5995bca43")}
         className="inline-flex h-9 w-9 items-center justify-center rounded-md outline-none transition-colors hover:bg-accent"
       >
         <span className="flex size-7 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold">
@@ -148,7 +153,7 @@ export function UserMenu({
               )}
             </span>
             <div className="flex items-center gap-1.5 text-base font-medium">
-              <span>Hi, {firstName}!</span>
+              <span>{translateInterface("greeting", { name: firstName })}</span>
               {isAdmin && <Shield className="size-3.5 text-primary" />}
             </div>
           </div>
@@ -177,8 +182,7 @@ export function UserMenu({
             <div className="flex items-center justify-between gap-3 border-t px-4 py-2.5">
               <span className="flex items-center gap-3 text-sm">
                 <Sun className="size-4 text-muted-foreground" />
-                Theme
-              </span>
+                {translateInterface("mefb52e7172b7")}</span>
               <div className="inline-flex rounded-lg border bg-background p-0.5">
                 {THEMES.map(({ m, Icon }) => (
                   <button
@@ -202,8 +206,7 @@ export function UserMenu({
               className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <LogOut className="size-4" />
-              Sign out
-            </button>
+              {translateInterface("m48f0d3d397d4")}</button>
           </div>
         </div>
       )}
