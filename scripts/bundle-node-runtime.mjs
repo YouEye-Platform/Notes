@@ -3,7 +3,7 @@ import { copyFileSync, chmodSync, existsSync, mkdirSync, readFileSync, readdirSy
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Exact public Node release bytes, carried inside the signed application payload.
+// Exact public Node release bytes, carried inside the sha256-verified release payload.
 const version = '24.22.0';
 const binarySHA256 = '67ca5783febb8bf85736c79fcdd92c8d6d465a0eb2a082672bcdfa76a506751c';
 const licenseSHA256 = '5888dbb9a1d2b18f2c3e6c5f6af1b39de658372b402a0577b002777f14c62ace';
@@ -36,7 +36,7 @@ const marker = '// youeye-pinned-node-launcher-v1';
 if (!readFileSync(entry, 'utf8').startsWith(marker)) renameSync(entry, generated);
 writeFileSync(entry, `${marker}
 // The existing service entrypoint remains compatible with older installed readers.
-// Only this launcher runs on the host Node; application code uses the signed runtime.
+// Only this launcher runs on the host Node; application code uses the bundled runtime.
 const { spawn } = require('node:child_process');
 const { realpathSync } = require('node:fs');
 const { join } = require('node:path');
@@ -48,7 +48,7 @@ if (realpathSync(process.execPath) === realpathSync(runtime)) {
   const terminate = () => child.kill('SIGTERM');
   const interrupt = () => child.kill('SIGINT');
   process.on('SIGTERM', terminate); process.on('SIGINT', interrupt);
-  child.once('error', () => { console.error('The signed application runtime could not start'); process.exitCode = 1; });
+  child.once('error', () => { console.error('The bundled application runtime could not start'); process.exitCode = 1; });
   child.once('exit', (code, signal) => {
     process.removeListener('SIGTERM', terminate); process.removeListener('SIGINT', interrupt);
     if (signal) process.kill(process.pid, signal); else process.exitCode = code ?? 1;

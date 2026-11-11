@@ -7,7 +7,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 
 const packager = resolve('scripts/bundle-node-runtime.mjs');
-test('signed Node handoff preserves entrypoint, exit and termination behavior', { timeout: 20000 }, async () => {
+test('bundled Node handoff preserves entrypoint, exit and termination behavior', { timeout: 20000 }, async () => {
   const root = mkdtempSync(join(tmpdir(), 'youeye-node-runtime-'));
   let child;
   try {

@@ -48,7 +48,8 @@ pnpm build
 ```
 
 The source-owned `.youeye/build/app` entrypoint produces an unsigned
-`standalone.tar` for independent validation, signing, and publication. It
+`standalone.tar` for independent validation and publication; releases are
+unsigned and checked by SHA-256 digest. It
 requires the build environment described in `.youeye/build/manifest.json`.
 Package and install-manifest versions must agree. Development tags use
 `dev-v<version>`; Stable tags use `v<version>`.
@@ -105,7 +106,7 @@ Next.js 16.4.2 builds explicitly use webpack for Serwist 9.5.13; run `pnpm lint`
 and `pnpm typecheck` separately. Static-only offline caching excludes private
 API, HTML and RSC responses.
 
-The signed standalone payload carries the exact Node runtime and upstream licence
+The standalone payload carries the exact Node runtime and upstream licence
 in `.youeye-runtime`. The existing `server.js` entrypoint forwards to this runtime,
 so native update/recovery switches application and runtime together.
 
