@@ -13,7 +13,7 @@ promotion and public publication require separately authorized workflows.
 
 ## Versions and releases
 
-`VERSION` holds the release line (`X.Y.Z`). Every build is `X.Y.Z-rc.N`: the
+`VERSION` holds the release line (`X.Y.Z`). Every build is `X.Y.Z-dev.N`: the
 release tool picks the next free `N` from this repository's release tags and
 passes the full version to the build as `YOUEYE_VERSION`; `.youeye/build/app`
 fails without it. Nothing in the source tree carries the build number:
