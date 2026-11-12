@@ -10,6 +10,7 @@
  */
 
 import { NextResponse } from "next/server";
+import { BUILD_VERSION } from "@/lib/build-version";
 
 const startTime = Date.now();
 
@@ -36,7 +37,7 @@ export function createHealthHandler(config: HealthConfig) {
     return NextResponse.json({
       status: "ok",
       app: config.appId,
-      version: process.env.npm_package_version || "unknown",
+      version: BUILD_VERSION,
       uptime: Math.floor((Date.now() - startTime) / 1000),
       initialized,
     });

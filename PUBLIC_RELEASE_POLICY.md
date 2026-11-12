@@ -18,7 +18,8 @@ creates executor identities nor makes an infrastructure trust assertion.
 it is source-bound product metadata, not an Infra manifest or replacement for
 Infra validation or publication records.
 
-A promotion must bind an exact source commit, source epoch, version, branch,
-tag, artifact SHA-256 digest, and destination. The version inside
-`standalone.tar` and the runtime `/api/manifest` must match the release tag.
+A release binds the source git tree, the build version and the SHA-256 digest
+of every asset in `product-release.json`. Promotion to another channel copies
+the same bytes without rebuilding. Releases are unsigned: integrity comes from
+those digests over HTTPS.
 Existing tags and assets are immutable.

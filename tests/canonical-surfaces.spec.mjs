@@ -30,7 +30,7 @@ test("Notes publishes canonical surfaces in runtime and install manifests", () =
   assert.doesNotMatch(route, /\n\s+widgets:\s*\[/);
   assert.doesNotMatch(route, /\n\s+timeline_embeds:\s*\[/);
 
-  assert.match(route, /version: packageJson\.version/);
+  assert.match(route, /version: BUILD_VERSION/);
   assert.match(yaml, versionPattern());
   assert.match(yaml, /surfaceSchemaVersion: 1/);
   assert.match(yaml, /kind: settings-panel/);
