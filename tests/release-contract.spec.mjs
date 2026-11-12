@@ -53,7 +53,7 @@ test("the source tree carries only the release line, never a build version", () 
   assert.match(yaml, /^version: 0\.0\.0$/m);
   assert.equal(pkg.packageManager, "pnpm@10.6.2");
   assert.match(yaml, /https:\/\/github\.com\/YouEye-Platform\/Notes/);
-  assert.match(yaml, /^\s+repo: YouEye-Platform\/Notes$/m);
+  assert.doesNotMatch(yaml, /^\s*repo:/m, "the install manifest names no repository");
 });
 
 test("the build requires YOUEYE_VERSION on the VERSION line", async (t) => {

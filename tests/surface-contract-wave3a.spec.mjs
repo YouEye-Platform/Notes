@@ -32,18 +32,18 @@ test("Notes declares the Wave 3A surface contract", () => {
   const types = read("src/lib/types/index.ts");
 
   assert.ok(route.includes("surfaceSchemaVersion: 1"));
-  assert.ok(yaml.includes("surfaceSchemaVersion: 1"));
+  assert.match(yaml, /^schema: youeye\.app\.v1$/m);
   assert.ok(route.includes('kind: "settings-panel"'));
   assert.ok(yaml.includes("kind: settings-panel"));
   assert.ok(route.includes('embedPath: "/embed/settings"'));
-  assert.ok(yaml.includes("embedPath: /embed/settings"));
+  assert.ok(yaml.includes("embed: /embed/settings"));
   assert.ok(types.includes("settings-panel"));
   assert.ok(has("src/app/embed/settings/page.tsx"));
 
   assert.ok(route.includes('kind: "notification"'));
   assert.ok(yaml.includes("kind: notification"));
   assert.ok(route.includes('embedPath: "/embed/notification/default"'));
-  assert.ok(yaml.includes("embedPath: /embed/notification/default"));
+  assert.ok(yaml.includes("embed: /embed/notification/default"));
   assert.ok(has("src/app/embed/notification/default/page.tsx"));
 
 });

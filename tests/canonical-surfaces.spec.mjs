@@ -32,7 +32,7 @@ test("Notes publishes canonical surfaces in runtime and install manifests", () =
 
   assert.match(route, /version: BUILD_VERSION/);
   assert.match(yaml, versionPattern());
-  assert.match(yaml, /surfaceSchemaVersion: 1/);
+  assert.match(yaml, /^schema: youeye\.app\.v1$/m);
   assert.match(yaml, /kind: settings-panel/);
   assert.match(yaml, /- id: recent-notes/);
   assert.match(yaml, /- id: notes-note-created/);
