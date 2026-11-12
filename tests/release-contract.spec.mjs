@@ -61,12 +61,12 @@ test("the build requires YOUEYE_VERSION on the VERSION line", async (t) => {
   const missing = prepare(directories);
   assert.notEqual(missing.status, 0);
   assert.match(missing.stderr, /YOUEYE_VERSION is required/);
-  for (const [version, pattern] of [["v1.2.3", /must be X\.Y\.Z/], [`${line}-rc.01`, /must be X\.Y\.Z/], [`${otherLine}-rc.1`, /not on the VERSION line/]]) {
+  for (const [version, pattern] of [["v1.2.3", /must be X\.Y\.Z/], [line, /must be X\.Y\.Z/], [`${line}-rc.1`, /must be X\.Y\.Z/], [`${line}-dev.01`, /must be X\.Y\.Z/], [`${otherLine}-dev.1`, /not on the VERSION line/]]) {
     const result = prepare(directories, { YOUEYE_VERSION: version });
     assert.notEqual(result.status, 0, version);
     assert.match(result.stderr, pattern, version);
   }
-  for (const version of [line, `${line}-rc.1`, `${line}-rc.12`]) {
+  for (const version of [`${line}-dev.1`, `${line}-dev.12`]) {
     const result = prepare(directories, { YOUEYE_VERSION: version });
     assert.equal(result.status, 0, `${version}: ${result.stderr}`);
   }
@@ -80,19 +80,19 @@ test("release files carry the build version without changing the source", async 
     cwd: directories.work, encoding: "utf8",
     env: { ...process.env, YOUEYE_VERSION: version, YOUEYE_RELEASE_OUTPUT: output, YOUEYE_CONTRACT_OUTPUT: contract },
   });
-  const result = run(`${line}-rc.3`);
+  const result = run(`${line}-dev.3`);
   assert.equal(result.status, 0, result.stderr);
   const release = JSON.parse(await readFile(output, "utf8"));
   assert.deepEqual(release, { format: "product-local-release-metadata-v1", metadata_scope: "product-local",
-    component: "notes", version: `${line}-rc.3`, artifact: "standalone.tar" });
-  assert.equal(await readFile(contract, "utf8"), yaml.replace(/^version: 0\.0\.0$/m, `version: ${line}-rc.3`));
+    component: "notes", version: `${line}-dev.3`, artifact: "standalone.tar" });
+  assert.equal(await readFile(contract, "utf8"), yaml.replace(/^version: 0\.0\.0$/m, `version: ${line}-dev.3`));
   assert.equal(await readFile(resolve(root, "youeye-app.yaml"), "utf8"), yaml);
-  for (const version of ["", "latest", "1.2"]) assert.notEqual(run(version).status, 0, version);
+  for (const version of ["", "latest", "1.2", line, `${line}-rc.3`]) assert.notEqual(run(version).status, 0, version);
 });
 
 test("shell source-commit contract is syntax-valid and rejects a mismatched checkout", async (t) => {
   const directories = await temporaryDirectories(t);
-  const result = prepare(directories, { YOUEYE_SOURCE_COMMIT: "0".repeat(40), YOUEYE_VERSION: `${line}-rc.1` });
+  const result = prepare(directories, { YOUEYE_SOURCE_COMMIT: "0".repeat(40), YOUEYE_VERSION: `${line}-dev.1` });
   assert.equal(spawnSync("bash", ["-n", ".youeye/build/app", ".youeye/build/lib.sh"], { cwd: root }).status, 0);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /does not match the checked-out source commit/);

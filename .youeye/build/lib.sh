@@ -24,14 +24,14 @@ app_prepare_contract() {
     export LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=UTC CI=1 NEXT_TELEMETRY_DISABLED=1
 }
 # VERSION holds the release line X.Y.Z; the release tool passes the full build version
-# (X.Y.Z-rc.N) as YOUEYE_VERSION. Nothing in the source tree carries the build number.
+# (X.Y.Z-dev.N) as YOUEYE_VERSION. Nothing in the source tree carries the build number.
 app_require_version() {
     local line
     line="$(tr -d '[:space:]' < "$YOUEYE_SOURCE_DIR/VERSION" 2>/dev/null || true)"
     [[ $line =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || app_build_fail 'VERSION must hold the release line X.Y.Z'
     YOUEYE_VERSION="${YOUEYE_VERSION:-}"
-    [[ -n $YOUEYE_VERSION ]] || app_build_fail "YOUEYE_VERSION is required: the full build version, e.g. $line-rc.1 (Tools/release/app-release assigns it)"
-    [[ $YOUEYE_VERSION =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[a-z][a-z0-9]*\.[1-9][0-9]*)?$ ]] || app_build_fail "YOUEYE_VERSION must be X.Y.Z[-token.N]; got $YOUEYE_VERSION"
+    [[ -n $YOUEYE_VERSION ]] || app_build_fail "YOUEYE_VERSION is required: the full build version, e.g. $line-dev.1 (Tools/release/app-release assigns it)"
+    [[ $YOUEYE_VERSION =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-dev\.[1-9][0-9]*$ ]] || app_build_fail "YOUEYE_VERSION must be X.Y.Z-dev.N; got $YOUEYE_VERSION"
     [[ ${YOUEYE_VERSION%%-*} == "$line" ]] || app_build_fail "YOUEYE_VERSION $YOUEYE_VERSION is not on the VERSION line $line"
 }
 app_require_pnpm() {
