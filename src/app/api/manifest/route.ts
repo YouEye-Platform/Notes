@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import packageJson from "../../../../package.json";
+import { BUILD_VERSION } from "@/lib/build-version";
 
 export async function GET() {
   return NextResponse.json({
     id: "ye-notes",
     name: "Notes",
-    version: packageJson.version,
+    version: BUILD_VERSION,
     description: "Create, organize, and share notes with tags, checklists, and reminders",
     icon: "StickyNote",
     permissions: ["timeline:write", "widgets:register"],

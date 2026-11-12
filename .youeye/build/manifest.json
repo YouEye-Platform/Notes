@@ -48,8 +48,16 @@
       "structural_checks": [
         "safe-uncompressed-tar",
         "root-server-js",
-        "package-version",
         "http-startup"
+      ]
+    },
+    {
+      "name": "youeye-app.yaml",
+      "role": "notes-install-contract",
+      "media_type": "application/yaml",
+      "minimum_size_bytes": 100,
+      "structural_checks": [
+        "build-version"
       ]
     }
   ],

@@ -11,7 +11,7 @@ test("runtime manifest exposes each installed surface exactly once with a real e
     .replace(/^import .*;\n/gm, "")
     .replace("export async function GET", "async function GET");
   const manifest = JSON.parse(JSON.stringify(await runInNewContext(`${source}\nGET()`, {
-    packageJson: JSON.parse(read("package.json")),
+    BUILD_VERSION: "1.2.3-rc.4",
     NextResponse: { json: (body) => body },
   })));
   const declared = [...read("youeye-app.yaml").split("\nsurfaces:\n")[1]

@@ -1,6 +1,6 @@
 {
   "name": "ye-app-notes",
-  "version": "0.6.0",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -8,8 +8,6 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test tests/*.spec.mjs",
-    "release:prepare": "node scripts/prepare-release.mjs",
-    "release:check": "node scripts/prepare-release.mjs --check",
     "typecheck": "tsc --noEmit --pretty false",
     "i18n:check": "node scripts/check-i18n-source.mjs && node scripts/check-i18n.mjs"
   },

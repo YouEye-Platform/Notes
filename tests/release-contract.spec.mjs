@@ -1,24 +1,34 @@
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
-import { assertSourceConsistency, expectedTag, inspectRelease, updateSourceVersions } from "../scripts/prepare-release.mjs";
+import { fileURLToPath } from "node:url";
 
-const root = resolve(new URL("..", import.meta.url).pathname);
+const root = fileURLToPath(new URL("..", import.meta.url));
 const manifest = JSON.parse(await readFile(resolve(root, ".youeye/build/manifest.json"), "utf8"));
 const entrypoint = await readFile(resolve(root, ".youeye/build/app"), "utf8");
 const helper = await readFile(resolve(root, ".youeye/build/lib.sh"), "utf8");
 const yaml = await readFile(resolve(root, "youeye-app.yaml"), "utf8");
 const pkg = JSON.parse(await readFile(resolve(root, "package.json"), "utf8"));
-const cli = (...args) => spawnSync(process.execPath, [resolve(root, "scripts/prepare-release.mjs"), ...args], { encoding: "utf8", env: { ...process.env, YOUEYE_RELEASE_ROOT: root } });
+const line = (await readFile(resolve(root, "VERSION"), "utf8")).trim();
+const otherLine = `${Number(line.split(".")[0]) + 1}.0.0`;
 
-async function temporarySource(version = "1.2.3", manifestVersion = version) {
-  const temporary = await mkdtemp(join(tmpdir(), "youeye-release-contract-"));
-  await writeFile(join(temporary, "package.json"), JSON.stringify({ version }) + "\n");
-  await writeFile(join(temporary, "youeye-app.yaml"), `apiVersion: v1\nversion: ${manifestVersion}\n`);
-  return temporary;
+async function temporaryDirectories(t) {
+  const output = await mkdtemp(join(tmpdir(), "youeye-release-out-"));
+  const work = await mkdtemp(join(tmpdir(), "youeye-release-work-"));
+  t.after(() => Promise.all([rm(output, { recursive: true, force: true }), rm(work, { recursive: true, force: true })]));
+  return { output, work };
+}
+
+function prepare(directories, env = {}) {
+  const base = { ...process.env };
+  delete base.YOUEYE_VERSION; delete base.YOUEYE_SOURCE_COMMIT; delete base.SOURCE_DATE_EPOCH;
+  return spawnSync("bash", ["-c", "source .youeye/build/lib.sh; app_prepare_contract"], {
+    cwd: root, encoding: "utf8",
+    env: { ...base, YOUEYE_SOURCE_DIR: root, YOUEYE_OUTPUT_DIR: directories.output, YOUEYE_WORK_DIR: directories.work, ...env },
+  });
 }
 
 test("source-owned build contract uses the supported unsigned standalone profile", () => {
@@ -29,61 +39,61 @@ test("source-owned build contract uses the supported unsigned standalone profile
   assert.equal(manifest.entrypoint, ".youeye/build/app");
   assert.equal(manifest.network.mode, "deny");
   assert.deepEqual(manifest.network.external_inputs, []);
-  assert.deepEqual(manifest.unsigned_outputs.map(({ name }) => name), ["standalone.tar"]);
+  assert.deepEqual(manifest.unsigned_outputs.map(({ name }) => name), ["standalone.tar", "youeye-app.yaml"]);
   assert.equal(manifest.validation_profile, "next-node24-standalone-v2");
-  assert.equal(manifest.publication_lane, "development");
   assert.match(entrypoint, /--frozen-lockfile --offline/);
   assert.doesNotMatch(entrypoint + helper, /openssl|gpg|forgejo|github api|publish/);
   assert.match(helper, /YOUEYE_SOURCE_COMMIT does not match/);
   assert.match(helper, /LICENSE TRADEMARK\.md THIRD_PARTY_NOTICES\.txt/);
 });
 
-test("package and install versions agree without changing the install source", async () => {
-  const release = await inspectRelease(root);
-  assert.equal(release.packageVersion, release.manifestVersion);
+test("the source tree carries only the release line, never a build version", () => {
+  assert.match(line, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
+  assert.equal(pkg.version, "0.0.0");
+  assert.match(yaml, /^version: 0\.0\.0$/m);
   assert.equal(pkg.packageManager, "pnpm@10.6.2");
   assert.match(yaml, /https:\/\/github\.com\/YouEye-Platform\/Notes/);
-  assert.match(yaml, /repo:\s+potemsla\/YE-App-Notes/);
-  assert.doesNotMatch(yaml, /repo:\s+YouEye-Platform\//);
+  assert.match(yaml, /^\s+repo: YouEye-Platform\/Notes$/m);
 });
 
-test("release tag validation rejects malformed branches, versions, and tags", () => {
-  assert.equal(expectedTag("main", "1.2.3"), "v1.2.3");
-  assert.equal(expectedTag("beta", "1.2.3.1"), "beta-v1.2.3.1");
-  for (const args of [["--version", "01.2.3"], ["--version", "1.2.3", "--branch", "feature/test"], ["--check", "--branch", "dev", "--tag", "v1.2.3"]]) {
-    const result = cli(...args);
-    assert.notEqual(result.status, 0, `${args.join(" ")} unexpectedly succeeded`);
+test("the build requires YOUEYE_VERSION on the VERSION line", async (t) => {
+  const directories = await temporaryDirectories(t);
+  const missing = prepare(directories);
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.stderr, /YOUEYE_VERSION is required/);
+  for (const [version, pattern] of [["v1.2.3", /must be X\.Y\.Z/], [`${line}-rc.01`, /must be X\.Y\.Z/], [`${otherLine}-rc.1`, /not on the VERSION line/]]) {
+    const result = prepare(directories, { YOUEYE_VERSION: version });
+    assert.notEqual(result.status, 0, version);
+    assert.match(result.stderr, pattern, version);
+  }
+  for (const version of [line, `${line}-rc.1`, `${line}-rc.12`]) {
+    const result = prepare(directories, { YOUEYE_VERSION: version });
+    assert.equal(result.status, 0, `${version}: ${result.stderr}`);
   }
 });
 
-test("CLI detects source-version mismatches without modifying either file", async () => {
-  const temporary = await temporarySource("1.2.3", "1.2.4");
-  try {
-    const before = await Promise.all([readFile(join(temporary, "package.json"), "utf8"), readFile(join(temporary, "youeye-app.yaml"), "utf8")]);
-    const result = spawnSync(process.execPath, [resolve(root, "scripts/prepare-release.mjs"), "--check"], { encoding: "utf8", env: { ...process.env, YOUEYE_RELEASE_ROOT: temporary } });
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /versions differ/);
-    assert.deepEqual(await Promise.all([readFile(join(temporary, "package.json"), "utf8"), readFile(join(temporary, "youeye-app.yaml"), "utf8")]), before);
-  } finally { await rm(temporary, { recursive: true, force: true }); }
+test("release files carry the build version without changing the source", async (t) => {
+  const directories = await temporaryDirectories(t);
+  const output = join(directories.output, "release-manifest.json");
+  const contract = join(directories.output, "youeye-app.yaml");
+  const run = (version) => spawnSync(process.execPath, [join(root, "scripts/write-release-manifest.mjs")], {
+    cwd: directories.work, encoding: "utf8",
+    env: { ...process.env, YOUEYE_VERSION: version, YOUEYE_RELEASE_OUTPUT: output, YOUEYE_CONTRACT_OUTPUT: contract },
+  });
+  const result = run(`${line}-rc.3`);
+  assert.equal(result.status, 0, result.stderr);
+  const release = JSON.parse(await readFile(output, "utf8"));
+  assert.deepEqual(release, { format: "product-local-release-metadata-v1", metadata_scope: "product-local",
+    component: "notes", version: `${line}-rc.3`, artifact: "standalone.tar" });
+  assert.equal(await readFile(contract, "utf8"), yaml.replace(/^version: 0\.0\.0$/m, `version: ${line}-rc.3`));
+  assert.equal(await readFile(resolve(root, "youeye-app.yaml"), "utf8"), yaml);
+  for (const version of ["", "latest", "1.2"]) assert.notEqual(run(version).status, 0, version);
 });
 
-test("paired version update restores both files when a staged rename fails", async () => {
-  const temporary = await temporarySource();
-  try {
-    const state = await inspectRelease(temporary);
-    const before = await Promise.all([readFile(state.packagePath, "utf8"), readFile(state.manifestPath, "utf8")]);
-    let renameCalls = 0;
-    await assert.rejects(() => updateSourceVersions(state, "2.0.0", { renameFile: async (...args) => { renameCalls += 1; if (renameCalls === 4) throw new Error("simulated rename failure"); const { rename } = await import("node:fs/promises"); return rename(...args); } }), /original version files were restored/);
-    assert.deepEqual(await Promise.all([readFile(state.packagePath, "utf8"), readFile(state.manifestPath, "utf8")]), before);
-  } finally { await rm(temporary, { recursive: true, force: true }); }
-});
-
-test("shell source-commit contract is syntax-valid and rejects a mismatched checkout", () => {
-  execFileSync("bash", ["-n", ".youeye/build/app", ".youeye/build/lib.sh"], { cwd: root });
-  const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
-  const command = `source .youeye/build/lib.sh; YOUEYE_SOURCE_DIR=${JSON.stringify(root)} YOUEYE_OUTPUT_DIR=$(mktemp -d) YOUEYE_WORK_DIR=$(mktemp -d) YOUEYE_SOURCE_COMMIT=${JSON.stringify("0".repeat(40))} app_prepare_contract`;
-  const result = spawnSync("bash", ["-c", command], { cwd: root, encoding: "utf8" });
+test("shell source-commit contract is syntax-valid and rejects a mismatched checkout", async (t) => {
+  const directories = await temporaryDirectories(t);
+  const result = prepare(directories, { YOUEYE_SOURCE_COMMIT: "0".repeat(40), YOUEYE_VERSION: `${line}-rc.1` });
+  assert.equal(spawnSync("bash", ["-n", ".youeye/build/app", ".youeye/build/lib.sh"], { cwd: root }).status, 0);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /does not match the checked-out source commit/);
-  assert.match(commit, /^[0-9a-f]{40}$/);
 });
