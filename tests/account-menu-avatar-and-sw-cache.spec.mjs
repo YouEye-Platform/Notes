@@ -81,7 +81,7 @@ test("service worker uses Serwist instead of hand-rolled install precaching", ()
   assert.ok(sw.includes("new Serwist("));
   assert.ok(sw.includes("precacheEntries: (self.__SW_MANIFEST ?? []).filter"));
   assert.ok(sw.includes("serwist.addEventListeners()"));
-  assert.ok(sw.includes("legacyPrefixes"));
+  assert.ok(sw.includes("cachePrefixes"));
   assert.ok(!sw.includes('self.addEventListener("install"'));
   assert.ok(!sw.includes("PRECACHE_ENTRIES.map"));
   assert.ok(!sw.includes("event.respondWith"));

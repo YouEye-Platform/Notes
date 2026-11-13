@@ -11,17 +11,10 @@ declare global {
 }
 declare const self: ServiceWorkerGlobalScope & typeof globalThis;
 
-const CACHE_PREFIX = "notes-public-v2";
+const CACHE_PREFIX = "notes-public";
 const STATIC_CACHE = `${CACHE_PREFIX}-assets`;
-const legacyPrefixes = ["notes-", "ye-notes-"];
-// Names used by the former Serwist defaultCache, including private RSC/HTML/API data.
-const legacyNames = new Set([
-  "start-url", "apis", "pages", "pages-rsc", "pages-rsc-prefetch", "pages-rsc-prefetches", "pages-html",
-  "next-data", "static-data-assets", "others", "cross-origin", "next-image",
-  "static-font-assets", "static-image-assets", "next-static-js-assets",
-  "static-audio-assets", "static-video-assets", "static-js-assets", "static-style-assets",
-  "google-fonts-webfonts", "google-fonts-stylesheets",
-]);
+// Every cache this app ever named (the current ones are kept): superseded versions are deleted on activate.
+const cachePrefixes = ["notes-", "ye-notes-"];
 
 const serwist = new Serwist({
   cacheId: CACHE_PREFIX,
@@ -56,8 +49,7 @@ self.addEventListener("activate", (event) => {
   const activate = event as Event & { waitUntil(promise: Promise<unknown>): void };
   activate.waitUntil(caches.keys().then((names) => Promise.all(names
     .filter((name) => name !== STATIC_CACHE && name !== serwist.precacheStrategy.cacheName)
-    .filter((name) => legacyPrefixes.some((prefix) => name.startsWith(prefix)) || legacyNames.has(name) ||
-      (name.startsWith("serwist-precache-") && name.endsWith(self.registration.scope)))
+    .filter((name) => cachePrefixes.some((prefix) => name.startsWith(prefix)))
     .map((name) => caches.delete(name)))));
 });
 serwist.addEventListeners();

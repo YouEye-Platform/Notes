@@ -1,5 +1,5 @@
 {
-  "schema": "youeye.build.v2",
+  "schema": "youeye.build.v1",
   "component": "notes",
   "build_kind": "next-standalone",
   "entrypoint": ".youeye/build/app",
@@ -16,7 +16,7 @@
     "digest": "92f4846683a50b2547e0bbf7c368ae1f34a1ed7388e6ebd6dfedc4770f8909cc"
   },
   "build_kit": {
-    "id": "youeye-web-build-kit-v2",
+    "id": "youeye-web-build-kit",
     "digest": "979bc1f33168ba2b8129c695d51e083f106d58e8c46e6c839580fa4c927bb432"
   },
   "public_inputs": {},
@@ -68,7 +68,7 @@
       "next-build-id"
     ]
   },
-  "validation_profile": "next-node24-standalone-v2",
+  "validation_profile": "next-node24-standalone",
   "sbom_profile": "spdx-2.3-v1",
   "provenance_profile": "slsa-provenance-v1",
   "publication_lane": "development",

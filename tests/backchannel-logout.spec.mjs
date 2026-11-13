@@ -114,6 +114,6 @@ test('local session enforcement denies old cookies, allows a new authorization a
   assert.equal(checks, 1, 'a later delivered revocation denies the new cookie locally');
   payload = { ...payload, userId: 'other-actor' };
   assert.equal((await sessionExports.getSession('notes')).userId, 'other-actor');
-  ledger.set('legacy', { session_id: 'sid', subject: 'other-actor', issued_at: null });
-  assert.equal(await sessionExports.getSession('notes'), null, 'legacy events without a signed time stay closed');
+  ledger.set('unsigned', { session_id: 'sid', subject: 'other-actor', issued_at: null });
+  assert.equal(await sessionExports.getSession('notes'), null, 'events without a signed time stay closed');
 });

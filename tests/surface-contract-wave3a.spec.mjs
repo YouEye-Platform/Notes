@@ -48,7 +48,7 @@ test("Notes declares the Wave 3A surface contract", () => {
 
 });
 
-test("Notes runtime source no longer emits legacy embed messages", () => {
+test("Notes runtime source emits no removed embed message types", () => {
   const combined = sourceFiles("src").map((file) => read(file)).join("\n");
   assert.doesNotMatch(combined, /youeye-embed-ready|youeye-embed-resize|youeye-card-ready|youeye-app-settings-resize|contentHeight|settings\?embed=true/);
 });
