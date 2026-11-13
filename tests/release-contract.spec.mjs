@@ -32,7 +32,7 @@ function prepare(directories, env = {}) {
 }
 
 test("source-owned build contract uses the supported unsigned standalone profile", () => {
-  assert.equal(manifest.schema, "youeye.build.v2");
+  assert.equal(manifest.schema, "youeye.build.v1");
   assert.equal(manifest.component, "notes");
   assert.equal(manifest.executor.id, "koshka-lxc-625-v1");
   assert.equal(manifest.build_kind, "next-standalone");
@@ -40,7 +40,7 @@ test("source-owned build contract uses the supported unsigned standalone profile
   assert.equal(manifest.network.mode, "deny");
   assert.deepEqual(manifest.network.external_inputs, []);
   assert.deepEqual(manifest.unsigned_outputs.map(({ name }) => name), ["standalone.tar", "youeye-app.yaml"]);
-  assert.equal(manifest.validation_profile, "next-node24-standalone-v2");
+  assert.equal(manifest.validation_profile, "next-node24-standalone");
   assert.match(entrypoint, /--frozen-lockfile --offline/);
   assert.doesNotMatch(entrypoint + helper, /openssl|gpg|forgejo|github api|publish/);
   assert.match(helper, /YOUEYE_SOURCE_COMMIT does not match/);
