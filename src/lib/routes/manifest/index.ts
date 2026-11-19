@@ -15,13 +15,13 @@
 
 import { NextResponse } from "next/server";
 import type { AppManifest } from "../../types";
-import { BUILD_VERSION } from "@/lib/build-version";
+import { APP_VERSION } from "@/lib/app-version";
 
 export function createManifestHandler(manifest: AppManifest) {
   return async function GET() {
     return NextResponse.json({
       ...manifest,
-      version: BUILD_VERSION,
+      version: APP_VERSION,
     });
   };
 }
