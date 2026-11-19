@@ -11,7 +11,8 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig = {
-  env: { YOUEYE_VERSION: process.env.YOUEYE_VERSION || "0.0.0" },
+  // The release line and git tree (.youeye/build/lib.sh), never a build name.
+  env: { YOUEYE_LINE: process.env.YOUEYE_LINE || "0.0.0", YOUEYE_SOURCE_TREE: process.env.YOUEYE_SOURCE_TREE || "" },
   generateBuildId: async () => process.env.YOUEYE_BUILD_ID || null,
   output: "standalone" as const,
 };

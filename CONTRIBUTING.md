@@ -13,19 +13,21 @@ promotion and public publication require separately authorized workflows.
 
 ## Versions and releases
 
-`VERSION` holds the release line (`X.Y.Z`). Every build is `X.Y.Z-dev.N`: the
-release tool picks the next free `N` from this repository's release tags and
-passes the full version to the build as `YOUEYE_VERSION`; `.youeye/build/app`
-fails without it. Nothing in the source tree carries the build number:
-`package.json` and `youeye-app.yaml` keep the placeholder `0.0.0`. The build
-writes the version into the app (`next.config.ts` inlines it), into
-`release-manifest.json` inside `standalone.tar`, and into the release copy of
-`youeye-app.yaml`.
+`VERSION` holds the release line (`X.Y.Z`). Every build is published on dev as
+`X.Y.Z-dev.N`: the release tool picks the next free `N` from this repository's
+release tags and passes that name to the build as `YOUEYE_VERSION`;
+`.youeye/build/app` fails without it or when it is not on the `VERSION` line.
+The build uses it for that check only. Nothing it writes names a build:
+`package.json` and `youeye-app.yaml` keep the placeholder `0.0.0`, and the app
+(`next.config.ts` inlines `YOUEYE_LINE` and `YOUEYE_SOURCE_TREE`),
+`release-manifest.json` inside `standalone.tar` and the release copy of
+`youeye-app.yaml` carry the line and the git tree only.
 
-A build keeps its version on every channel (dev, alpha, beta, stable).
-Promotion copies the same bytes and never rebuilds. Release tags are
-`v<version>`. A release holds `standalone.tar`, `youeye-app.yaml` and
-`product-release.json`, which binds them by SHA-256 and the source git tree.
+Promotion copies the same bytes under the channel's name (`X.Y.Z-alpha.N`,
+`X.Y.Z-beta.N`, `X.Y.Z`) and never rebuilds; the box shows the installed
+release's name. Release tags are `v<version>`. A release holds `standalone.tar`,
+`youeye-app.yaml` and `product-release.json`, which binds them by SHA-256 and
+the source git tree.
 
 ## Timeline producers
 

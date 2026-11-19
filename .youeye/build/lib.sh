@@ -18,21 +18,36 @@ app_prepare_contract() {
     fi
     [[ $YOUEYE_SOURCE_COMMIT =~ ^[0-9a-f]{40}$ ]] || app_build_fail 'YOUEYE_SOURCE_COMMIT must be the exact 40-character source commit'
     [[ $SOURCE_DATE_EPOCH =~ ^[1-9][0-9]*$ ]] || app_build_fail 'SOURCE_DATE_EPOCH must be a positive integer'
-    app_require_version
+    app_require_version; app_require_source_tree
     install -d -m 0755 "$YOUEYE_OUTPUT_DIR" "$YOUEYE_WORK_DIR"
-    export YOUEYE_SOURCE_DIR YOUEYE_OUTPUT_DIR YOUEYE_WORK_DIR YOUEYE_SOURCE_COMMIT SOURCE_DATE_EPOCH YOUEYE_VERSION
+    export YOUEYE_SOURCE_DIR YOUEYE_OUTPUT_DIR YOUEYE_WORK_DIR YOUEYE_SOURCE_COMMIT SOURCE_DATE_EPOCH YOUEYE_LINE YOUEYE_SOURCE_TREE
     export LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=UTC CI=1 NEXT_TELEMETRY_DISABLED=1
 }
-# VERSION holds the release line X.Y.Z; the release tool passes the full build version
-# (X.Y.Z-dev.N) as YOUEYE_VERSION. Nothing in the source tree carries the build number.
+# VERSION holds the release line X.Y.Z; the release tool passes the build name
+# (X.Y.Z-dev.N, the dev release's name) as YOUEYE_VERSION. The build only checks it
+# against VERSION: everything it writes or bakes names the line (YOUEYE_LINE) and the
+# git tree (YOUEYE_SOURCE_TREE), never the build name, so the same files can be
+# promoted under other names. YOUEYE_VERSION is unset for the rest of the build.
 app_require_version() {
     local line
     line="$(tr -d '[:space:]' < "$YOUEYE_SOURCE_DIR/VERSION" 2>/dev/null || true)"
     [[ $line =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || app_build_fail 'VERSION must hold the release line X.Y.Z'
     YOUEYE_VERSION="${YOUEYE_VERSION:-}"
-    [[ -n $YOUEYE_VERSION ]] || app_build_fail "YOUEYE_VERSION is required: the full build version, e.g. $line-dev.1 (Tools/release/app-release assigns it)"
+    [[ -n $YOUEYE_VERSION ]] || app_build_fail "YOUEYE_VERSION is required: the build name, e.g. $line-dev.1 (Tools/release/app-release assigns it)"
     [[ $YOUEYE_VERSION =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-dev\.[1-9][0-9]*$ ]] || app_build_fail "YOUEYE_VERSION must be X.Y.Z-dev.N; got $YOUEYE_VERSION"
     [[ ${YOUEYE_VERSION%%-*} == "$line" ]] || app_build_fail "YOUEYE_VERSION $YOUEYE_VERSION is not on the VERSION line $line"
+    YOUEYE_LINE="$line"
+    unset YOUEYE_VERSION
+}
+# A build is identified by its git tree, the same on every host.
+app_require_source_tree() {
+    local git_tree
+    YOUEYE_SOURCE_TREE="${YOUEYE_SOURCE_TREE:-}"
+    if git_tree="$(git -C "$YOUEYE_SOURCE_DIR" rev-parse 'HEAD^{tree}' 2>/dev/null)"; then
+        [[ -z $YOUEYE_SOURCE_TREE || $YOUEYE_SOURCE_TREE == "$git_tree" ]] || app_build_fail 'YOUEYE_SOURCE_TREE does not match the checked-out source tree'
+        YOUEYE_SOURCE_TREE="$git_tree"
+    fi
+    [[ $YOUEYE_SOURCE_TREE =~ ^[0-9a-f]{40}$ ]] || app_build_fail 'YOUEYE_SOURCE_TREE must be the exact 40-character source tree'
 }
 app_require_pnpm() {
     app_require_command node; app_require_command pnpm; app_require_command tar
